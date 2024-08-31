@@ -17,7 +17,7 @@ func init() {
 
 	// Load .env file
 	if err := godotenv.Load(); err != nil {
-		log.Warn().Msg("No .env file found")
+		log.Warn().Msg("No \".env\" file found! Using environment variables.")
 	}
 
 	// load configuration
