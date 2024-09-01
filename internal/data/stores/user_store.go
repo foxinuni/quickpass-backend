@@ -43,7 +43,7 @@ func (s *PostgresUserStore) GetAll(ctx context.Context, filter UserFilters) ([]m
 
 func (s *PostgresUserStore) GetById(ctx context.Context, id int) (*models.User, error) {
 	var user models.User
-	row := s.pool.QueryRow(ctx, `SELECT id, email, number FROM users WHERE id = $1`, id)
+	row := s.pool.QueryRow(ctx, `SELECT user_id, email, number FROM users WHERE id = $1`, id)
 
 	if err := row.Scan(&user.UserID, &user.Email, &user.Number); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -58,7 +58,7 @@ func (s *PostgresUserStore) GetById(ctx context.Context, id int) (*models.User, 
 
 func (s *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	var user models.User
-	row := s.pool.QueryRow(ctx, `SELECT id, email, number FROM users WHERE email = $1`, email)
+	row := s.pool.QueryRow(ctx, `SELECT user_id, email, number FROM users WHERE email = $1`, email)
 
 	if err := row.Scan(&user.UserID, &user.Email, &user.Number); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -72,14 +72,14 @@ func (s *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*mode
 }
 
 func (s *PostgresUserStore) Create(ctx context.Context, user *models.User) error {
-	return s.pool.QueryRow(ctx, `INSERT INTO users (email, number) VALUES ($1, $2) RETURNING id`, user.Email, user.Number).Scan(&user.UserID)
+	return s.pool.QueryRow(ctx, `INSERT INTO users (email, number) VALUES ($1, $2) RETURNING user_id`, user.Email, user.Number).Scan(&user.UserID)
 }
 
 func (s *PostgresUserStore) Update(ctx context.Context, user *models.User) error {
-	return s.pool.QueryRow(ctx, `UPDATE users SET email = $1, number = $2 WHERE id = $3 RETURNING id`, user.Email, user.Number, user.UserID).Scan(&user.UserID)
+	return s.pool.QueryRow(ctx, `UPDATE users SET email = $1, number = $2 WHERE id = $3 RETURNING user_id`, user.Email, user.Number, user.UserID).Scan(&user.UserID)
 }
 
 func (s *PostgresUserStore) Delete(ctx context.Context, id int) error {
-	_, err := s.pool.Exec(ctx, "DELETE FROM users WHERE id = $1", id)
+	_, err := s.pool.Exec(ctx, "DELETE FROM users WHERE user_id = $1", id)
 	return err
 }

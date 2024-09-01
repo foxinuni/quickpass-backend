@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 
+	"github.com/foxinuni/quickpass-backend/internal/data/models"
 	"github.com/foxinuni/quickpass-backend/internal/data/stores"
 	"github.com/foxinuni/quickpass-backend/internal/domain/entities"
 )
@@ -40,8 +41,8 @@ func (r *StoreSessionRepository) GetById(sessionID int) (*entities.Session, erro
 	}
 
 	// Convert the result to a Session entity
-	user := entities.NewUser(u.UserID, u.Email, u.Number)
-	session := entities.NewSession(s.SessionID, user, s.Enabled, s.Token, s.PhoneModel, s.IMEI)
+	user := ModelToUser(u)
+	session := ModelToSession(s, user)
 	return session, nil
 }
 
@@ -58,13 +59,13 @@ func (r *StoreSessionRepository) GetByToken(token string) (*entities.Session, er
 	}
 
 	// Convert the result to a Session entity
-	user := entities.NewUser(u.UserID, u.Email, u.Number)
-	session := entities.NewSession(s.SessionID, user, s.Enabled, s.Token, s.PhoneModel, s.IMEI)
+	user := ModelToUser(u)
+	session := ModelToSession(s, user)
 	return session, nil
 }
 
 func (r *StoreSessionRepository) Create(session *entities.Session) error {
-	panic("not implemented")
+	return r.sessionStore.Create(context.Background(), SessionToModel(session))
 }
 
 func (r *StoreSessionRepository) Update(session *entities.Session) error {
@@ -73,4 +74,12 @@ func (r *StoreSessionRepository) Update(session *entities.Session) error {
 
 func (r *StoreSessionRepository) Delete(session *entities.Session) error {
 	panic("not implemented")
+}
+
+func SessionToModel(session *entities.Session) *models.Session {
+	return models.NewSession(session.GetSessionID(), session.GetUser().GetUserID(), session.GetEnabled(), session.GetToken(), session.GetPhoneModel(), session.GetIMEI())
+}
+
+func ModelToSession(model *models.Session, user *entities.User) *entities.Session {
+	return entities.NewSession(model.SessionID, user, model.Enabled, model.Token, model.PhoneModel, model.IMEI)
 }

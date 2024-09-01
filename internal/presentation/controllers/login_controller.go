@@ -34,6 +34,10 @@ func (lc *LoginController) Login(c echo.Context) error {
 	// Call the login service
 	session, err := lc.authService.Login(login.Email, login.Number, login.PhoneModel, login.PhoneEMEI)
 	if err != nil {
+		if err == services.ErrInvalidCredentials {
+			return echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
+		}
+
 		return err
 	}
 

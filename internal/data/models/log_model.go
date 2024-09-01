@@ -8,3 +8,12 @@ type Log struct {
 	IsInside   bool
 	Time       time.Time
 }
+
+func NewLog(logID int, occasionID int, isInside bool, time time.Time) *Log {
+	return &Log{
+		LogID:      logID,
+		OccasionID: occasionID,
+		IsInside:   isInside,
+		Time:       time,
+	}
+}

@@ -37,7 +37,7 @@ func (s *PostgresSessionStore) GetAll(ctx context.Context, filter SessionFilter)
 
 func (s *PostgresSessionStore) GetById(ctx context.Context, id int) (*models.Session, error) {
 	var session models.Session
-	row := s.pool.QueryRow(ctx, `SELECT id, user_id, enabled, token, phone_model, imei FROM sessions WHERE id = $1`, id)
+	row := s.pool.QueryRow(ctx, `SELECT session_id, user_id, enabled, token, phone_model, imei FROM sessions WHERE session_id = $1`, id)
 
 	// Scan the row into the session model
 	if err := row.Scan(&session.SessionID, &session.UserID, &session.Enabled, &session.Token, &session.PhoneModel, &session.IMEI); err != nil {
@@ -50,7 +50,7 @@ func (s *PostgresSessionStore) GetById(ctx context.Context, id int) (*models.Ses
 
 func (s *PostgresSessionStore) GetByToken(ctx context.Context, token string) (*models.Session, error) {
 	var session models.Session
-	row := s.pool.QueryRow(ctx, `SELECT id, user_id, enabled, token, phone_model, imei FROM sessions WHERE token = $1`, token)
+	row := s.pool.QueryRow(ctx, `SELECT session_id, user_id, enabled, token, phone_model, imei FROM sessions WHERE token = $1`, token)
 
 	// Scan the row into the session model
 	if err := row.Scan(&session.SessionID, &session.UserID, &session.Enabled, &session.Token, &session.PhoneModel, &session.IMEI); err != nil {
@@ -74,13 +74,13 @@ func (s *PostgresSessionStore) Update(ctx context.Context, session *models.Sessi
 	_, err := s.pool.Exec(ctx, `
 		UPDATE sessions 
 		SET user_id = $1, enabled = $2, token = $3, phone_model = $4, imei = $5
-		WHERE id = $6
+		WHERE session_id = $6
 	`, session.UserID, session.Enabled, session.Token, session.PhoneModel, session.IMEI, session.SessionID)
 
 	return err
 }
 
 func (s *PostgresSessionStore) Delete(ctx context.Context, id int) error {
-	_, err := s.pool.Exec(ctx, `DELETE FROM sessions WHERE id = $1`, id)
+	_, err := s.pool.Exec(ctx, `DELETE FROM sessions WHERE session_id = $1`, id)
 	return err
 }

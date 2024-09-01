@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/foxinuni/quickpass-backend/internal/data/repo"
+	"github.com/foxinuni/quickpass-backend/internal/data/stores"
 	"github.com/foxinuni/quickpass-backend/internal/domain/entities"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -44,6 +45,10 @@ func (a *JwtAuthService) Login(email, number, model, emei string) (*entities.Ses
 	// Get the user by email
 	user, err := a.userRepo.GetByEmail(email)
 	if err != nil {
+		if err == stores.ErrUserNotFound {
+			return nil, ErrInvalidCredentials
+		}
+
 		return nil, err
 	}
 
