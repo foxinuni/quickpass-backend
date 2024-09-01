@@ -16,9 +16,11 @@ func ErrorHandlerMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		// Setup the default error response
 		message := err.Error()
-		code := 500
+		code := http.StatusInternalServerError
 
 		// Check if it's an HTTP error
+		// he - http error si lo pudo convertir
+		// ok - si lo pudo convertir
 		if he, ok := err.(*echo.HTTPError); ok {
 			code = he.Code
 

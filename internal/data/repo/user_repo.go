@@ -49,15 +49,31 @@ func (r *StoreUserRepository) GetByEmail(email string) (*entities.User, error) {
 }
 
 func (r *StoreUserRepository) Create(user *entities.User) error {
-	return r.userStore.Create(context.Background(), UserToModel(user))
+	// Convert the User entity to a User model
+	model := UserToModel(user)
+
+	// Create the user in the store
+	if err := r.userStore.Create(context.Background(), model); err != nil {
+		return err
+	}
+
+	// Update the User entity with the new ID
+	*user = *ModelToUser(model)
+	return nil
 }
 
 func (r *StoreUserRepository) Update(user *entities.User) error {
-	panic("not implemented")
+	model := UserToModel(user)
+	if err := r.userStore.Update(context.Background(), model); err != nil {
+		return err
+	}
+
+	*user = *ModelToUser(model)
+	return nil
 }
 
 func (r *StoreUserRepository) Delete(userID int) error {
-	panic("not implemented")
+	return r.userStore.Delete(context.Background(), userID)
 }
 
 func UserToModel(user *entities.User) *models.User {

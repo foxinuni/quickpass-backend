@@ -65,15 +65,32 @@ func (r *StoreSessionRepository) GetByToken(token string) (*entities.Session, er
 }
 
 func (r *StoreSessionRepository) Create(session *entities.Session) error {
-	return r.sessionStore.Create(context.Background(), SessionToModel(session))
+	model := SessionToModel(session)
+	if err := r.sessionStore.Create(context.Background(), model); err != nil {
+		return err
+	}
+
+	*session = *ModelToSession(model, session.GetUser())
+	return nil
 }
 
 func (r *StoreSessionRepository) Update(session *entities.Session) error {
-	panic("not implemented")
+	model := SessionToModel(session)
+	if err := r.sessionStore.Update(context.Background(), model); err != nil {
+		return err
+	}
+
+	*session = *ModelToSession(model, session.GetUser())
+	return nil
 }
 
 func (r *StoreSessionRepository) Delete(session *entities.Session) error {
-	panic("not implemented")
+	model := SessionToModel(session)
+	if err := r.sessionStore.Delete(context.Background(), model.SessionID); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func SessionToModel(session *entities.Session) *models.Session {

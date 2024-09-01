@@ -3,7 +3,10 @@ package auth
 import (
 	"github.com/foxinuni/quickpass-backend/internal/domain/entities"
 	"github.com/foxinuni/quickpass-backend/internal/domain/services"
+	"github.com/foxinuni/quickpass-backend/internal/presentation/middlewares"
 )
+
+var _ middlewares.AuthStrategy = &AuthServiceStrategy{}
 
 type AuthServiceStrategy struct {
 	authService services.AuthService

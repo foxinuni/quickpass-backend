@@ -43,7 +43,7 @@ func (s *PostgresUserStore) GetAll(ctx context.Context, filter UserFilters) ([]m
 
 func (s *PostgresUserStore) GetById(ctx context.Context, id int) (*models.User, error) {
 	var user models.User
-	row := s.pool.QueryRow(ctx, `SELECT user_id, email, number FROM users WHERE id = $1`, id)
+	row := s.pool.QueryRow(ctx, `SELECT user_id, email, number FROM users WHERE user_id = $1`, id)
 
 	if err := row.Scan(&user.UserID, &user.Email, &user.Number); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -76,7 +76,8 @@ func (s *PostgresUserStore) Create(ctx context.Context, user *models.User) error
 }
 
 func (s *PostgresUserStore) Update(ctx context.Context, user *models.User) error {
-	return s.pool.QueryRow(ctx, `UPDATE users SET email = $1, number = $2 WHERE id = $3 RETURNING user_id`, user.Email, user.Number, user.UserID).Scan(&user.UserID)
+	_, err := s.pool.Exec(ctx, `UPDATE users SET email = $1, number = $2 WHERE user_id = $3`, user.Email, user.Number, user.UserID)
+	return err
 }
 
 func (s *PostgresUserStore) Delete(ctx context.Context, id int) error {

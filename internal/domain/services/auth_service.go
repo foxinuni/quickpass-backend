@@ -86,6 +86,10 @@ func (a *JwtAuthService) Logout(session *entities.Session) error {
 func (a *JwtAuthService) ValidateSession(token string) (*entities.Session, error) {
 	// Parse the token
 	t, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, ErrInvalidToken
+		}
+
 		return []byte(a.options.GetJwtSecret()), nil
 	})
 	if err != nil {
@@ -100,7 +104,7 @@ func (a *JwtAuthService) ValidateSession(token string) (*entities.Session, error
 	// Get the session by token
 	session, err := a.sessionRepo.GetByToken(token)
 	if err != nil {
-		return nil, err
+		return nil, ErrInvalidToken
 	}
 
 	// Check if the session is valid

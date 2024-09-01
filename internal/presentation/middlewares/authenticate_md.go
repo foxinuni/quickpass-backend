@@ -1,11 +1,14 @@
 package middlewares
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/foxinuni/quickpass-backend/internal/domain/entities"
 	"github.com/labstack/echo/v4"
 )
+
+var _ context.Context = context.Background()
 
 type AuthStrategy interface {
 	Authenticate(token string) (*entities.Session, error)
@@ -21,14 +24,14 @@ func AuthMiddleware(authStrategy AuthStrategy) echo.MiddlewareFunc {
 			}
 
 			// Authenticate the token
-			user, err := authStrategy.Authenticate(token)
+			session, err := authStrategy.Authenticate(token)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 			}
 
 			// Set the session and user in the context
-			c.Set("session", user)
-			c.Set("user", user.GetUser())
+			c.Set("session", session)
+			c.Set("user", session.GetUser())
 
 			// Call the next handler
 			return next(c)

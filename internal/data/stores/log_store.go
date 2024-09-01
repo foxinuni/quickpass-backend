@@ -2,10 +2,14 @@ package stores
 
 import (
 	"context"
+	"errors"
 
 	"github.com/foxinuni/quickpass-backend/internal/data/models"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+var ErrLogNotFound = errors.New("log not found")
 
 type LogFilter struct{}
 
@@ -31,21 +35,53 @@ func NewPostgresLogStore(pool *pgxpool.Pool) *PostgresLogStore {
 }
 
 func (s *PostgresLogStore) GetAll(ctx context.Context, filter LogFilter) ([]models.Log, error) {
-	panic("not implemented")
+	var logs []models.Log
+	rows, err := s.pool.Query(ctx, `SELECT log_id, occasion_id, time, is_inside FROM logs`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var log models.Log
+		if err := rows.Scan(&log.LogID, &log.OccasionID, &log.Time, &log.IsInside); err != nil {
+			return nil, err
+		}
+
+		logs = append(logs, log)
+	}
+
+	return logs, nil
 }
 
 func (s *PostgresLogStore) GetById(ctx context.Context, id int) (*models.Log, error) {
-	panic("not implemented")
+	var log models.Log
+	row := s.pool.QueryRow(ctx, `
+		SELECT log_id, occasion_id, time, is_inside
+		FROM logs
+		WHERE log_id = $1
+	`, id)
+	if err := row.Scan(&log.LogID, &log.OccasionID, &log.Time, &log.IsInside); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrLogNotFound
+		}
+
+		return nil, err
+	}
+
+	return &log, nil
 }
 
 func (s *PostgresLogStore) Create(ctx context.Context, log *models.Log) error {
-	panic("not implemented")
+	return s.pool.QueryRow(ctx, `INSERT INTO logs (occasion_id, time, is_inside) VALUES ($1, $2, $3) RETURNING log_id`, log.OccasionID, log.Time, log.IsInside).Scan(&log.LogID)
 }
 
 func (s *PostgresLogStore) Update(ctx context.Context, log *models.Log) error {
-	panic("not implemented")
+	_, err := s.pool.Exec(ctx, `UPDATE logs SET occasion_id = $1, time = $2, is_inside = $3 WHERE log_id = $4`, log.OccasionID, log.Time, log.IsInside, log.LogID)
+	return err
 }
 
 func (s *PostgresLogStore) Delete(ctx context.Context, id int) error {
-	panic("not implemented")
+	_, err := s.pool.Exec(ctx, `DELETE FROM logs WHERE log_id = $1`, id)
+	return err
 }

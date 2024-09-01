@@ -49,7 +49,7 @@ CREATE TABLE occasions (
 
 CREATE TABLE logs (
     log_id SERIAL PRIMARY KEY,
+    occasion_id INTEGER REFERENCES occasions(occasion_id)
     time TIMESTAMP,
     is_inside BOOLEAN,
-    occasion_id INTEGER REFERENCES occasions(occasion_id)
 );
