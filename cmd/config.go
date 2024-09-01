@@ -6,6 +6,7 @@ type ApplicationConfig struct {
 	ListenAddress    string `env:"LISTEN_ADDRESS" default:":3000"`
 	MigrationsSource string `env:"MIGRATIONS_SRC" default:"file://migrations"`
 	DatabaseURL      string `env:"DATABASE_URL" required:"true"`
+	JwtSecret        string `env:"JWT_SECRET" required:"true"`
 }
 
 func LoadConfig() (*ApplicationConfig, error) {
@@ -30,4 +31,8 @@ func (c *ApplicationConfig) GetMigrationsSource() string {
 
 func (c *ApplicationConfig) GetDatabaseURL() string {
 	return c.DatabaseURL
+}
+
+func (c *ApplicationConfig) GetJwtSecret() string {
+	return c.JwtSecret
 }

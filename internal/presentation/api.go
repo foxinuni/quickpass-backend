@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/foxinuni/quickpass-backend/internal/presentation/middlewares"
+	"github.com/foxinuni/quickpass-backend/internal/presentation/routes"
 	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
@@ -14,12 +15,14 @@ type QuickpassAPIOptions interface {
 }
 
 type QuickpassAPI struct {
-	options QuickpassAPIOptions
+	options    QuickpassAPIOptions
+	authRouter *routes.AuthRouter
 }
 
-func NewQuickpassAPI(options QuickpassAPIOptions) *QuickpassAPI {
+func NewQuickpassAPI(options QuickpassAPIOptions, authRouter *routes.AuthRouter) *QuickpassAPI {
 	return &QuickpassAPI{
-		options: options,
+		options:    options,
+		authRouter: authRouter,
 	}
 }
 
@@ -38,9 +41,13 @@ func (api *QuickpassAPI) Listen() error {
 	app.Use(middlewares.RequestLogMiddleware)
 	app.Use(middlewares.ErrorHandlerMiddleware)
 
+	// Health check route
 	app.GET("/", func(c echo.Context) error {
 		return c.String(200, "Hello, World!")
 	})
+
+	// Register the routes
+	api.authRouter.RegisterRoutes(app)
 
 	log.Info().Msgf("HTTP server is now listening on %s", api.options.GetListenAddress())
 	if err := app.Start(api.options.GetListenAddress()); err != nil {

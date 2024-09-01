@@ -14,10 +14,19 @@ func ErrorHandlerMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			return nil
 		}
 
-		// Get the error code
+		// Setup the default error response
+		message := err.Error()
 		code := 500
+
+		// Check if it's an HTTP error
 		if he, ok := err.(*echo.HTTPError); ok {
 			code = he.Code
+
+			if msg, ok := he.Message.(string); ok {
+				message = msg
+			} else {
+				message = http.StatusText(code)
+			}
 		}
 
 		// Log the error
@@ -26,8 +35,8 @@ func ErrorHandlerMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		// Return the error
 		return c.JSON(code, map[string]interface{}{
 			"status":  code,
-			"message": http.StatusText(code),
-			"error":   err.Error(),
+			"error":   http.StatusText(code),
+			"message": message,
 		})
 	}
 }
