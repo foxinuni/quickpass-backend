@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/foxinuni/quickpass-backend/internal/core"
+	"github.com/foxinuni/quickpass-backend/internal/data/repo"
 	"github.com/foxinuni/quickpass-backend/internal/domain/services"
 	"github.com/foxinuni/quickpass-backend/internal/presentation"
 	"github.com/foxinuni/quickpass-backend/internal/presentation/auth"
@@ -35,13 +36,21 @@ func init() {
 
 func main() {
 	// Create store factory
-	_, err := core.NewPostgresStoreFactory(config)
+	storeFactory, err := core.NewPostgresStoreFactory(config)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create store factory")
 	}
 
+	// Create stores
+	userStore := storeFactory.NewUserStore()
+	sessionStore := storeFactory.NewSessionStore()
+
+	// Create repositories
+	userRepo := repo.NewStoreUserRepository(userStore)
+	sessionRepo := repo.NewStoreSessionRepository(sessionStore, userStore)
+
 	// Create services
-	authService := services.NewJwtAuthService(config)
+	authService := services.NewJwtAuthService(config, userRepo, sessionRepo)
 
 	// Create strategies & middlewares
 	authStrategy := auth.NewAuthServiceStrategy(authService)

@@ -12,6 +12,7 @@ type UserFilters struct{}
 type UserStore interface {
 	GetAll(ctx context.Context, filter UserFilters) ([]models.User, error)
 	GetById(ctx context.Context, id int) (*models.User, error)
+	GetByEmail(ctx context.Context, email string) (*models.User, error)
 	Create(ctx context.Context, user *models.User) error
 	Update(ctx context.Context, user *models.User) error
 	Delete(ctx context.Context, id int) error
@@ -31,6 +32,10 @@ func NewPostgresUserStore(pool *pgxpool.Pool) *PostgresUserStore {
 }
 
 func (s *PostgresUserStore) GetAll(ctx context.Context, filter UserFilters) ([]models.User, error) {
+	panic("not implemented")
+}
+
+func (s *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	panic("not implemented")
 }
 

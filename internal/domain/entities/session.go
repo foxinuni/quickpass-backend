@@ -3,15 +3,17 @@ package entities
 type Session struct {
 	SessionID  int
 	User       *User
+	Enabled    bool
 	Token      string
 	PhoneModel string
 	IMEI       string
 }
 
-func NewSession(sessionID int, user *User, token string, phoneModel string, imei string) *Session {
+func NewSession(sessionID int, user *User, enabled bool, token string, phoneModel string, imei string) *Session {
 	return &Session{
 		SessionID:  sessionID,
 		User:       user,
+		Enabled:    enabled,
 		Token:      token,
 		PhoneModel: phoneModel,
 		IMEI:       imei,
@@ -24,6 +26,10 @@ func (s *Session) GetSessionID() int {
 
 func (s *Session) GetUser() *User {
 	return s.User
+}
+
+func (s *Session) GetEnabled() bool {
+	return s.Enabled
 }
 
 func (s *Session) GetToken() string {
@@ -48,6 +54,10 @@ func (s *Session) SetUser(user *User) {
 
 func (s *Session) SetToken(token string) {
 	s.Token = token
+}
+
+func (s *Session) SetEnabled(enabled bool) {
+	s.Enabled = enabled
 }
 
 func (s *Session) SetPhoneModel(phoneModel string) {

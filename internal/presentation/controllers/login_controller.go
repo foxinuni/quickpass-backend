@@ -32,7 +32,7 @@ func (lc *LoginController) Login(c echo.Context) error {
 	}
 
 	// Call the login service
-	session, err := lc.authService.Login(login.Email, login.Number)
+	session, err := lc.authService.Login(login.Email, login.Number, login.PhoneModel, login.PhoneEMEI)
 	if err != nil {
 		return err
 	}
