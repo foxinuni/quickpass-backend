@@ -2,9 +2,15 @@ package stores
 
 import (
 	"context"
+	"errors"
 
 	"github.com/foxinuni/quickpass-backend/internal/data/models"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+var (
+	ErrUserNotFound = errors.New("user not found")
 )
 
 type UserFilters struct{}
@@ -35,22 +41,45 @@ func (s *PostgresUserStore) GetAll(ctx context.Context, filter UserFilters) ([]m
 	panic("not implemented")
 }
 
-func (s *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*models.User, error) {
-	panic("not implemented")
+func (s *PostgresUserStore) GetById(ctx context.Context, id int) (*models.User, error) {
+	var user models.User
+	row := s.pool.QueryRow(ctx, `SELECT id, email, number FROM users WHERE id = $1`, id)
+
+	if err := row.Scan(&user.UserID, &user.Email, &user.Number); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+
+		return nil, err
+	}
+
+	return &user, nil
 }
 
-func (s *PostgresUserStore) GetById(ctx context.Context, id int) (*models.User, error) {
-	panic("not implemented")
+func (s *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*models.User, error) {
+	var user models.User
+	row := s.pool.QueryRow(ctx, `SELECT id, email, number FROM users WHERE email = $1`, email)
+
+	if err := row.Scan(&user.UserID, &user.Email, &user.Number); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+
+		return nil, err
+	}
+
+	return &user, nil
 }
 
 func (s *PostgresUserStore) Create(ctx context.Context, user *models.User) error {
-	panic("not implemented")
+	return s.pool.QueryRow(ctx, `INSERT INTO users (email, number) VALUES ($1, $2) RETURNING id`, user.Email, user.Number).Scan(&user.UserID)
 }
 
 func (s *PostgresUserStore) Update(ctx context.Context, user *models.User) error {
-	panic("not implemented")
+	return s.pool.QueryRow(ctx, `UPDATE users SET email = $1, number = $2 WHERE id = $3 RETURNING id`, user.Email, user.Number, user.UserID).Scan(&user.UserID)
 }
 
 func (s *PostgresUserStore) Delete(ctx context.Context, id int) error {
-	panic("not implemented")
+	_, err := s.pool.Exec(ctx, "DELETE FROM users WHERE id = $1", id)
+	return err
 }
