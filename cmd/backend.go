@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	"github.com/foxinuni/quickpass-backend/internal/core"
 	"github.com/foxinuni/quickpass-backend/internal/presentation"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
@@ -29,6 +30,13 @@ func init() {
 }
 
 func main() {
+	// Create store factory
+	_, err := core.NewPostgresStoreFactory(config)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to create store factory")
+	}
+
+	// Create the Quickpass API
 	api := presentation.NewQuickpassAPI(config)
 	if err := api.Listen(); err != nil {
 		log.Fatal().Err(err).Msg("Failed to start HTTP server")

@@ -3,8 +3,9 @@ package main
 import "github.com/cristalhq/aconfig"
 
 type ApplicationConfig struct {
-	ListenAddress string `default:":3000" env:"LISTEN_ADDRESS"`
-	DatabaseURL   string `env:"DATABASE_URL" required:"true"`
+	ListenAddress    string `env:"LISTEN_ADDRESS" default:":3000"`
+	MigrationsSource string `env:"MIGRATIONS_SRC" default:"file://migrations"`
+	DatabaseURL      string `env:"DATABASE_URL" required:"true"`
 }
 
 func LoadConfig() (*ApplicationConfig, error) {
@@ -21,4 +22,12 @@ func LoadConfig() (*ApplicationConfig, error) {
 
 func (c *ApplicationConfig) GetListenAddress() string {
 	return c.ListenAddress
+}
+
+func (c *ApplicationConfig) GetMigrationsSource() string {
+	return c.MigrationsSource
+}
+
+func (c *ApplicationConfig) GetDatabaseURL() string {
+	return c.DatabaseURL
 }

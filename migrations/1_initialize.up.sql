@@ -1,19 +1,19 @@
-CREATE TABLE USERS (
+CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
-    number INTEGER(10)
+    number INTEGER
 );
 
-CREATE TABLE SESSIONS (
+CREATE TABLE sessions (
     session_id SERIAL PRIMARY KEY,
     jwt_token VARCHAR(255),
     phone_model VARCHAR(255),
-    IMEI INTEGER(10),
-    enabled INTEGER(1),
-    user_id INTEGER(10) REFERENCES USERS(user_id)
+    IMEI VARCHAR(255),
+    enabled BOOLEAN,
+    user_id INTEGER REFERENCES users(user_id)
 );
 
-CREATE TABLE EVENTS (
+CREATE TABLE events (
     event_id SERIAL PRIMARY KEY,
     start_date TIMESTAMP,
     end_date TIMESTAMP,
@@ -21,35 +21,35 @@ CREATE TABLE EVENTS (
     name VARCHAR(255) UNIQUE NOT NULL
 );
 
-CREATE TABLE STATES (
+CREATE TABLE states (
     state_id SERIAL PRIMARY KEY,
     state VARCHAR(255) UNIQUE NOT NULL
 );
 
-CREATE TABLE ACCOMODATIONS (
+CREATE TABLE accomodations (
     acc_id SERIAL PRIMARY KEY,
-    is_house INTEGER(1),
+    is_house BOOLEAN,
     address VARCHAR(255) UNIQUE NOT NULL
 );
 
-CREATE TABLE BOOKINGS (
+CREATE TABLE bookings (
     booking_id SERIAL PRIMARY KEY,
     entry_date TIMESTAMP,
     leaving_date TIMESTAMP,
-    acc_id INTEGER(10) REFERENCES ACCOMODATIONS(acc_id)
+    acc_id INTEGER REFERENCES accomodations(acc_id)
 );
 
-CREATE TABLE OCCASIONS (
+CREATE TABLE occasions (
     occasion_id SERIAL PRIMARY KEY,
-    user_id INTEGER(10) REFERENCES USERS(user_id),
-    event_id INTEGER(10) REFERENCES EVENTS(event_id),
-    booking_id INTEGER(10) REFERENCES BOOKINGS(booking_id),
-    state_id INTEGER(10) REFERENCES STATES(state_id)
+    user_id INTEGER REFERENCES users(user_id),
+    event_id INTEGER REFERENCES events(event_id),
+    booking_id INTEGER REFERENCES bookings(booking_id),
+    state_id INTEGER REFERENCES states(state_id)
 );
 
-CREATE TABLE LOGS (
+CREATE TABLE logs (
     log_id SERIAL PRIMARY KEY,
     time TIMESTAMP,
-    is_inside INTEGER(1),
-    occasion_id INTEGER(10) REFERENCES OCCASIONS(occasion_id)
+    is_inside BOOLEAN,
+    occasion_id INTEGER REFERENCES occasions(occasion_id)
 );

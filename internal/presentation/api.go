@@ -18,7 +18,12 @@ func NewQuickpassAPI(options QuickpassAPIOptions) *QuickpassAPI {
 }
 
 func (api *QuickpassAPI) Listen() error {
+	// Create a new Echo instance
 	app := echo.New()
+
+	// Hide the banner and port
+	app.HideBanner = true
+	app.HidePort = true
 
 	app.GET("/", func(c echo.Context) error {
 		return c.String(200, "Hello, World!")
