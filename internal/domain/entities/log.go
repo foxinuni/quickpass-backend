@@ -3,10 +3,10 @@ package entities
 import "time"
 
 type Log struct {
-	LogID    int
-	Occasion *Occasion
-	IsInside bool
-	Time     time.Time
+	LogID    int       `json:"log_id"`
+	Occasion *Occasion `json:"occasion"`
+	IsInside bool      `json:"is_inside"`
+	Time     time.Time `json:"time"`
 }
 
 func NewLog(logID int, occasion *Occasion, isInside bool, time time.Time) *Log {

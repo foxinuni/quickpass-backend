@@ -3,10 +3,10 @@ package entities
 import "time"
 
 type Booking struct {
-	BookingID    int
-	Accomodation *Accomodation
-	EntryDate    time.Time
-	ExitDate     time.Time
+	BookingID    int `json:"booking_id"`	
+	Accomodation *Accomodation `json:"accomodation"`
+	EntryDate    time.Time `json:"entry_date"`
+	ExitDate     time.Time `json:"exit_date"`
 }
 
 func NewBooking(bookingID int, accomodation *Accomodation, entryDate time.Time, exitDate time.Time) *Booking {

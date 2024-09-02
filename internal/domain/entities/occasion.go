@@ -1,11 +1,11 @@
 package entities
 
 type Occasion struct {
-	OccasionID int
-	User       *User
-	Event      *Event
-	Booking    *Booking
-	State      *State
+	OccasionID int      `json:"occasion_id"`
+	User       *User    `json:"user"`
+	Event      *Event   `json:"event"`
+	Booking    *Booking `json:"booking"`
+	State      *State   `json:"state"`
 }
 
 func NewOccasion(occasionID int, user *User, event *Event, booking *Booking, state *State) *Occasion {

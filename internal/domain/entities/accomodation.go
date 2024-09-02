@@ -1,9 +1,9 @@
 package entities
 
 type Accomodation struct {
-	AccomodationID int
-	IsHouse        bool
-	Address        string
+	AccomodationID int    `json:"accomodation_id"`
+	IsHouse        bool   `json:"is_house"`
+	Address        string `json:"address"`
 }
 
 func NewAccomodation(accomodationID int, isHouse bool, address string) *Accomodation {

@@ -16,6 +16,7 @@ type StateFilter struct{}
 type StateStore interface {
 	GetAll(ctx context.Context, filter StateFilter) ([]models.State, error)
 	GetById(ctx context.Context, id int) (*models.State, error)
+	GetByName(ctx context.Context, name string) (*models.State, error)
 	Create(ctx context.Context, state *models.State) error
 	Update(ctx context.Context, state *models.State) error
 	Delete(ctx context.Context, id int) error
@@ -57,6 +58,20 @@ func (s *PostgresStateStore) GetAll(ctx context.Context, filter StateFilter) ([]
 func (s *PostgresStateStore) GetById(ctx context.Context, id int) (*models.State, error) {
 	var state models.State
 	row := s.pool.QueryRow(ctx, `SELECT state_id, name FROM states WHERE state_id = $1`, id)
+	if err := row.Scan(&state.StateID, &state.StateName); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrStateNotFound
+		}
+
+		return nil, err
+	}
+
+	return &state, nil
+}
+
+func (s *PostgresStateStore) GetByName(ctx context.Context, name string) (*models.State, error) {
+	var state models.State
+	row := s.pool.QueryRow(ctx, `SELECT state_id, name FROM states WHERE name = $1`, name)
 	if err := row.Scan(&state.StateID, &state.StateName); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrStateNotFound

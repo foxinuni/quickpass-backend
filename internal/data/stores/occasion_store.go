@@ -11,7 +11,12 @@ import (
 
 var ErrOccasionNotFound = errors.New("occasion not found")
 
-type OccasionFilter struct{}
+type OccasionFilter struct {
+	UserID    *int
+	EventID   *int
+	BookingID *int
+	StateID   *int
+}
 
 type OccasionStore interface {
 	GetAll(ctx context.Context, filter OccasionFilter) ([]models.Occasion, error)

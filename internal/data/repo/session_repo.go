@@ -3,7 +3,6 @@ package repo
 import (
 	"context"
 
-	"github.com/foxinuni/quickpass-backend/internal/data/models"
 	"github.com/foxinuni/quickpass-backend/internal/data/stores"
 	"github.com/foxinuni/quickpass-backend/internal/domain/entities"
 )
@@ -91,12 +90,4 @@ func (r *StoreSessionRepository) Delete(session *entities.Session) error {
 	}
 
 	return nil
-}
-
-func SessionToModel(session *entities.Session) *models.Session {
-	return models.NewSession(session.GetSessionID(), session.GetUser().GetUserID(), session.GetEnabled(), session.GetToken(), session.GetPhoneModel(), session.GetIMEI())
-}
-
-func ModelToSession(model *models.Session, user *entities.User) *entities.Session {
-	return entities.NewSession(model.SessionID, user, model.Enabled, model.Token, model.PhoneModel, model.IMEI)
 }

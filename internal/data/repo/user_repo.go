@@ -3,7 +3,6 @@ package repo
 import (
 	"context"
 
-	"github.com/foxinuni/quickpass-backend/internal/data/models"
 	"github.com/foxinuni/quickpass-backend/internal/data/stores"
 	"github.com/foxinuni/quickpass-backend/internal/domain/entities"
 )
@@ -74,12 +73,4 @@ func (r *StoreUserRepository) Update(user *entities.User) error {
 
 func (r *StoreUserRepository) Delete(userID int) error {
 	return r.userStore.Delete(context.Background(), userID)
-}
-
-func UserToModel(user *entities.User) *models.User {
-	return models.NewUser(user.GetUserID(), user.GetEmail(), user.GetNumber())
-}
-
-func ModelToUser(model *models.User) *entities.User {
-	return entities.NewUser(model.UserID, model.Email, model.Number)
 }

@@ -1,8 +1,8 @@
 package entities
 
 type State struct {
-	StateID   int
-	StateName string
+	StateID   int    `json:"state_id"`
+	StateName string `json:"state_name"`
 }
 
 func NewState(stateID int, stateName string) *State {

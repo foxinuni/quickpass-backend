@@ -3,14 +3,14 @@ package models
 import "time"
 
 type Event struct {
-	EventID   string
+	EventID   int
 	Name      string
 	Address   string
 	StartDate time.Time
 	EndDate   time.Time
 }
 
-func NewEvent(eventID string, name string, address string, startDate time.Time, endDate time.Time) *Event {
+func NewEvent(eventID int, name string, address string, startDate time.Time, endDate time.Time) *Event {
 	return &Event{
 		EventID:   eventID,
 		Name:      name,

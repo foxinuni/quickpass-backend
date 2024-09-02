@@ -1,12 +1,12 @@
 package entities
 
 type Session struct {
-	SessionID  int
-	User       *User
-	Enabled    bool
-	Token      string
-	PhoneModel string
-	IMEI       string
+	SessionID  int    `json:"session_id"`
+	User       *User  `json:"user"`
+	Enabled    bool   `json:"enabled"`
+	Token      string `json:"token"`
+	PhoneModel string `json:"phone_model"`
+	IMEI       string `json:"imei"`
 }
 
 func NewSession(sessionID int, user *User, enabled bool, token string, phoneModel string, imei string) *Session {
