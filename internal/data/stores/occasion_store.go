@@ -16,6 +16,7 @@ type OccasionFilter struct {
 	EventID   *int
 	BookingID *int
 	StateID   *int
+	TypeOccasion *bool	//true if its event, false if its booking
 }
 
 type OccasionStore interface {
@@ -41,7 +42,17 @@ func NewPostgresOccasionStore(pool *pgxpool.Pool) *PostgresOccasionStore {
 
 func (s *PostgresOccasionStore) GetAll(ctx context.Context, filter OccasionFilter) ([]models.Occasion, error) {
 	var occasions []models.Occasion
-	rows, err := s.pool.Query(ctx, `SELECT occasion_id, user_id, event_id, booking_id, state_id FROM occasions`)
+
+	rows, err := s.pool.Query(ctx, `
+		SELECT occasion_id, user_id, event_id, booking_id, state_id 
+		FROM occasions
+		WHERE
+				(CASE WHEN $1::int IS NULL THEN TRUE ELSE user_id = $1::int END)
+			AND (CASE WHEN $2::int IS NULL THEN TRUE ELSE event_id = $2::int END)
+			AND (CASE WHEN $3::int IS NULL THEN TRUE ELSE booking_id = $3::int END)
+			AND (CASE WHEN $4::int IS NULL THEN TRUE ELSE state_id = $4::int END)
+			AND (CASE WHEN $5::bool IS NULL THEN TRUE WHEN $5::bool = TRUE THEN event_id IS NOT NULL ELSE booking_id IS NOT NULL END)
+	`, filter.UserID, filter.EventID, filter.BookingID, filter.StateID, filter.TypeOccasion)
 	if err != nil {
 		return nil, err
 	}

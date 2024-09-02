@@ -34,7 +34,7 @@ type PostgresStoreFactory struct {
 	options PgStoreFactoryOptions
 }
 
-func NewPostgresStoreFactory(options PgStoreFactoryOptions) (*PostgresStoreFactory, error) {
+func NewPostgresStoreFactory(options PgStoreFactoryOptions) (StoreFactory, error) {
 	// Create the pgx connection pool
 	log.Info().Msgf("Using postgres database (uri: %q, migrations: %q)", options.GetDatabaseURL(), options.GetMigrationsSource())
 	pool, err := pgxpool.New(context.Background(), options.GetDatabaseURL())
@@ -94,4 +94,37 @@ func (f *PostgresStoreFactory) NewStateStore() stores.StateStore {
 
 func (f *PostgresStoreFactory) NewUserStore() stores.UserStore {
 	return stores.NewPostgresUserStore(f.pool)
+}
+
+// ----------------- Store Builders -----------------
+func BuildAccomoStore(factory StoreFactory) stores.AccomodationStore {
+	return factory.NewAccomodationStore()
+}
+
+func BuildBookingStore(factory StoreFactory) stores.BookingStore {
+	return factory.NewBookingStore()
+}
+
+func BuildEventStore(factory StoreFactory) stores.EventStore {
+	return factory.NewEventStore()
+}
+
+func BuildLogStore(factory StoreFactory) stores.LogStore {
+	return factory.NewLogStore()
+}
+
+func BuildOccasionStore(factory StoreFactory) stores.OccasionStore {
+	return factory.NewOccasionStore()
+}
+
+func BuildSessionStore(factory StoreFactory) stores.SessionStore {
+	return factory.NewSessionStore()
+}
+
+func BuildStateStore(factory StoreFactory) stores.StateStore {
+	return factory.NewStateStore()
+}
+
+func BuildUserStore(factory StoreFactory) stores.UserStore {
+	return factory.NewUserStore()
 }

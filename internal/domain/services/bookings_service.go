@@ -6,23 +6,25 @@ import (
 )
 
 type BookingsService interface {
-	GetBookingsForUser(user *entities.User) ([]*entities.Booking, error)
+	GetBookingsForUser(user *entities.User) ([]*entities.Occasion, error)
 }
 
 var _ BookingsService = (*RepoBookingsService)(nil)
 
 type RepoBookingsService struct {
-	bookingRepo repo.BookingRepository
+	//bookingRepo repo.BookingRepository
+	occasionRepo repo.OccasionRepository
 }
 
-func NewRepoBookingsService(bookingRepo repo.BookingRepository) BookingsService{
+func NewRepoBookingsService(occasionRepo repo.OccasionRepository) BookingsService{
 	return &RepoBookingsService{
-		bookingRepo: bookingRepo,
+		occasionRepo: occasionRepo,
 	}
 }
 
-func (s *RepoBookingsService) GetBookingsForUser(user * entities.User) ([]*entities.Booking, error){
-	bookings, err := s.bookingRepo.GetAll(repo.BookingForUser(user))
+func (s *RepoBookingsService) GetBookingsForUser(user * entities.User) ([]*entities.Occasion, error){
+	//occasion for type false means bookings
+	bookings, err := s.occasionRepo.GetAll(repo.OccasionForType(false))
 
 	if err != nil {
 		return nil, err

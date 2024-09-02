@@ -15,6 +15,7 @@ type OccasionLookupFilter struct {
 	Event   *entities.Event
 	Booking *entities.Booking
 	State   *entities.State
+	TypeOfOccasion	*bool
 }
 
 func DefaultOccasionLookupFilter() *OccasionLookupFilter {
@@ -45,6 +46,12 @@ func OccasionForState(state *entities.State) OccasionLookupFilterOption {
 	}
 }
 
+func OccasionForType(typeOfOccasion bool) OccasionLookupFilterOption{
+	return func(f *OccasionLookupFilter){
+		f.TypeOfOccasion = &typeOfOccasion
+	}
+}
+
 func LookupToFilter(lookup *OccasionLookupFilter) stores.OccasionFilter {
 	var occasionFilter stores.OccasionFilter
 	if lookup.User != nil {
@@ -61,6 +68,10 @@ func LookupToFilter(lookup *OccasionLookupFilter) stores.OccasionFilter {
 
 	if lookup.State != nil {
 		occasionFilter.StateID = &lookup.State.StateID
+	}
+
+	if lookup.TypeOfOccasion != nil {
+		occasionFilter.TypeOccasion = lookup.TypeOfOccasion
 	}
 
 	return occasionFilter
