@@ -41,7 +41,16 @@ func NewPostgresOccasionStore(pool *pgxpool.Pool) *PostgresOccasionStore {
 
 func (s *PostgresOccasionStore) GetAll(ctx context.Context, filter OccasionFilter) ([]models.Occasion, error) {
 	var occasions []models.Occasion
-	rows, err := s.pool.Query(ctx, `SELECT occasion_id, user_id, event_id, booking_id, state_id FROM occasions`)
+
+	rows, err := s.pool.Query(ctx, `
+		SELECT occasion_id, user_id, event_id, booking_id, state_id 
+		FROM occasions
+		WHERE
+				(CASE WHEN $1::int IS NULL THEN TRUE ELSE user_id = $1::int END)
+			AND (CASE WHEN $2::int IS NULL THEN TRUE ELSE event_id = $2::int END)
+			AND (CASE WHEN $3::int IS NULL THEN TRUE ELSE booking_id = $3::int END)
+			AND (CASE WHEN $4::int IS NULL THEN TRUE ELSE state_id = $4::int END)
+	`, filter.UserID, filter.EventID, filter.BookingID, filter.StateID)
 	if err != nil {
 		return nil, err
 	}
