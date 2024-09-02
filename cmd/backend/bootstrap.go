@@ -60,6 +60,7 @@ var backendSet = wire.NewSet(
 	core.BuildStateStore,
 	core.BuildOccasionStore,
 	core.BuildAccomoStore,
+	core.BuildLogStore,
 
 	// Store factory
 	core.NewPostgresStoreFactory, // This is the factory that creates all stores

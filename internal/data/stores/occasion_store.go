@@ -2,6 +2,7 @@ package stores
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 
 	"github.com/foxinuni/quickpass-backend/internal/data/models"
@@ -12,11 +13,11 @@ import (
 var ErrOccasionNotFound = errors.New("occasion not found")
 
 type OccasionFilter struct {
-	UserID    *int
-	EventID   *int
-	BookingID *int
-	StateID   *int
-	TypeOccasion *bool	//true if its event, false if its booking
+	UserID       *int
+	EventID      *int
+	BookingID    *int
+	StateID      *int
+	TypeOccasion *bool //true if its event, false if its booking
 }
 
 type OccasionStore interface {
@@ -60,10 +61,21 @@ func (s *PostgresOccasionStore) GetAll(ctx context.Context, filter OccasionFilte
 
 	for rows.Next() {
 		var occasion models.Occasion
-		if err := rows.Scan(&occasion.OccasionID, &occasion.UserID, &occasion.EventID, &occasion.BookingID, &occasion.StateID); err != nil {
+		var eventID, bookingID sql.NullInt32 // use sql.NullInt32 to handle NULL values
+
+		if err := rows.Scan(&occasion.OccasionID, &occasion.UserID, &eventID, &bookingID, &occasion.StateID); err != nil {
 			return nil, err
 		}
 
+		if eventID.Valid {
+			eventIDInt := int(eventID.Int32)
+			occasion.EventID = &eventIDInt
+		}
+
+		if bookingID.Valid {
+			bookingIDInt := int(bookingID.Int32)
+			occasion.BookingID = &bookingIDInt
+		}
 		occasions = append(occasions, occasion)
 	}
 

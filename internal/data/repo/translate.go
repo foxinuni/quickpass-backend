@@ -37,7 +37,12 @@ func LogToModel(log *entities.Log) *models.Log {
 	return models.NewLog(log.GetLogID(), log.GetOccasion().GetOccasionID(), log.GetIsInside(), log.GetTime())
 }
 
-func ModelToOccasion(occasions *models.Occasion, user *entities.User, event *entities.Event, booking *entities.Booking, state *entities.State, isInside bool) *entities.Occasion {
+func ModelToOccasion(occasions *models.Occasion, user *entities.User, event *entities.Event, booking *entities.Booking, state *entities.State, lastLog *models.Log) *entities.Occasion {
+	var isInside bool = false
+	//is inside by default will be false, if there are no logs, then by default its outside, if there's a log, then we ask it if its inside or outside
+	if lastLog != nil {
+		isInside = lastLog.IsInside
+	}
 	return entities.NewOccasion(occasions.OccasionID, user, event, booking, state, isInside)
 }
 

@@ -102,6 +102,7 @@ func NewStoreOccasionRepository(
 	bookingStore stores.BookingStore,
 	accomodationStore stores.AccomodationStore,
 	stateStore stores.StateStore,
+	logStore stores.LogStore,
 ) OccasionRepository {
 	return &StoreOccasionRepository{
 		occasionStore:     occasionStore,
@@ -110,6 +111,7 @@ func NewStoreOccasionRepository(
 		bookingStore:      bookingStore,
 		accomodationStore: accomodationStore,
 		stateStore:        stateStore,
+		logStore:          logStore,
 	}
 }
 
@@ -121,21 +123,28 @@ func (r *StoreOccasionRepository) PopulateOccasion(occasion *models.Occasion) (*
 	}
 
 	// Get the event from the store
-	event, err := r.eventStore.GetById(context.Background(), occasion.EventID)
-	if err != nil {
-		return nil, err
+	var event *models.Event
+	if occasion.EventID != nil {
+		event, err = r.eventStore.GetById(context.Background(), *occasion.EventID)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Get the booking from the store
-	booking, err := r.bookingStore.GetById(context.Background(), occasion.BookingID)
-	if err != nil {
-		return nil, err
-	}
+	var booking *models.Booking
+	var accomodation *models.Accomodation
+	if occasion.BookingID != nil {
+		booking, err = r.bookingStore.GetById(context.Background(), *occasion.BookingID)
+		if err != nil {
+			return nil, err
+		}
 
-	// Get the accomodation from the store
-	accomodation, err := r.accomodationStore.GetById(context.Background(), booking.AccomodationID)
-	if err != nil {
-		return nil, err
+		// Get the accomodation from the store
+		accomodation, err = r.accomodationStore.GetById(context.Background(), booking.AccomodationID)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Get the state from the store
@@ -150,14 +159,22 @@ func (r *StoreOccasionRepository) PopulateOccasion(occasion *models.Occasion) (*
 		return nil, err
 	}
 
+	var eventEntity *entities.Event
+	if event != nil {
+		eventEntity = ModelToEvent(event)
+	}
+	var bookingEntity *entities.Booking
+	if booking != nil {
+		bookingEntity = ModelToBooking(booking, ModelToAccomodation(accomodation))
+	}
 	// Convert the result to a Occasion entity
 	return ModelToOccasion(
 		occasion,
 		ModelToUser(user),
-		ModelToEvent(event),
-		ModelToBooking(booking, ModelToAccomodation(accomodation)),
+		eventEntity,
+		bookingEntity,
 		ModelToState(state),
-		log.IsInside,
+		log,
 	), nil
 }
 

@@ -73,11 +73,11 @@ func (s *PostgresLogStore) GetById(ctx context.Context, id int) (*models.Log, er
 	return &log, nil
 }
 
-//added in order to get the last log from a certain occasion, used to know if the user 
-//is currently inside or outside
-func (s *PostgresLogStore) GetLastFromOcassion(ctx context.Context, id int) (*models.Log, error){
+// added in order to get the last log from a certain occasion, used to know if the user
+// is currently inside or outside
+func (s *PostgresLogStore) GetLastFromOcassion(ctx context.Context, id int) (*models.Log, error) {
 	var log models.Log
-	row := s.pool.QueryRow(ctx,`
+	row := s.pool.QueryRow(ctx, `
 		SELECT log_id, occasion_id, time, is_inside
 		FROM logs
 		WHERE occasion_id = $1
@@ -86,7 +86,8 @@ func (s *PostgresLogStore) GetLastFromOcassion(ctx context.Context, id int) (*mo
 	`, id)
 	if err := row.Scan(&log.LogID, &log.OccasionID, &log.Time, &log.IsInside); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrLogNotFound
+			//since here it isn't an error if the log wasn't found, means the occasion hasn't any logs associated at the moment
+			return nil, nil
 		}
 
 		return nil, err
