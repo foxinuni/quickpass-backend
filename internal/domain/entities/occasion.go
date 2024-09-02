@@ -6,15 +6,17 @@ type Occasion struct {
 	Event      *Event   `json:"event"`
 	Booking    *Booking `json:"booking"`
 	State      *State   `json:"state"`
+	Inside     bool     `json:"inside"`
 }
 
-func NewOccasion(occasionID int, user *User, event *Event, booking *Booking, state *State) *Occasion {
+func NewOccasion(occasionID int, user *User, event *Event, booking *Booking, state *State, isInside bool) *Occasion {
 	return &Occasion{
 		OccasionID: occasionID,
 		User:       user,
 		Event:      event,
 		Booking:    booking,
 		State:      state,
+		Inside:     isInside,
 	}
 }
 

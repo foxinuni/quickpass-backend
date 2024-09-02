@@ -37,8 +37,8 @@ func LogToModel(log *entities.Log) *models.Log {
 	return models.NewLog(log.GetLogID(), log.GetOccasion().GetOccasionID(), log.GetIsInside(), log.GetTime())
 }
 
-func ModelToOccasion(occasions *models.Occasion, user *entities.User, event *entities.Event, booking *entities.Booking, state *entities.State) *entities.Occasion {
-	return entities.NewOccasion(occasions.OccasionID, user, event, booking, state)
+func ModelToOccasion(occasions *models.Occasion, user *entities.User, event *entities.Event, booking *entities.Booking, state *entities.State, isInside bool) *entities.Occasion {
+	return entities.NewOccasion(occasions.OccasionID, user, event, booking, state, isInside)
 }
 
 func OccasionToModel(occasion *entities.Occasion) *models.Occasion {

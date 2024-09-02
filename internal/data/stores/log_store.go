@@ -19,6 +19,7 @@ type LogStore interface {
 	Create(ctx context.Context, log *models.Log) error
 	Update(ctx context.Context, log *models.Log) error
 	Delete(ctx context.Context, id int) error
+	GetLastFromOcassion(ctx context.Context, id int) (*models.Log, error)
 }
 
 // Checks at compile time if PostgresLogStore implements LogStore
@@ -60,6 +61,28 @@ func (s *PostgresLogStore) GetById(ctx context.Context, id int) (*models.Log, er
 		SELECT log_id, occasion_id, time, is_inside
 		FROM logs
 		WHERE log_id = $1
+	`, id)
+	if err := row.Scan(&log.LogID, &log.OccasionID, &log.Time, &log.IsInside); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrLogNotFound
+		}
+
+		return nil, err
+	}
+
+	return &log, nil
+}
+
+//added in order to get the last log from a certain occasion, used to know if the user 
+//is currently inside or outside
+func (s *PostgresLogStore) GetLastFromOcassion(ctx context.Context, id int) (*models.Log, error){
+	var log models.Log
+	row := s.pool.QueryRow(ctx,`
+		SELECT log_id, occasion_id, time, is_inside
+		FROM logs
+		WHERE occasion_id = $1
+		ORDER BY time DESC
+		LIMIT 1
 	`, id)
 	if err := row.Scan(&log.LogID, &log.OccasionID, &log.Time, &log.IsInside); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

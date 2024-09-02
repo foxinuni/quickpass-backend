@@ -11,11 +11,11 @@ import (
 type OccasionLookupFilterOption func(*OccasionLookupFilter)
 
 type OccasionLookupFilter struct {
-	User    *entities.User
-	Event   *entities.Event
-	Booking *entities.Booking
-	State   *entities.State
-	TypeOfOccasion	*bool
+	User           *entities.User
+	Event          *entities.Event
+	Booking        *entities.Booking
+	State          *entities.State
+	TypeOfOccasion *bool
 }
 
 func DefaultOccasionLookupFilter() *OccasionLookupFilter {
@@ -46,8 +46,8 @@ func OccasionForState(state *entities.State) OccasionLookupFilterOption {
 	}
 }
 
-func OccasionForType(typeOfOccasion bool) OccasionLookupFilterOption{
-	return func(f *OccasionLookupFilter){
+func OccasionForType(typeOfOccasion bool) OccasionLookupFilterOption {
+	return func(f *OccasionLookupFilter) {
 		f.TypeOfOccasion = &typeOfOccasion
 	}
 }
@@ -92,6 +92,7 @@ type StoreOccasionRepository struct {
 	bookingStore      stores.BookingStore
 	accomodationStore stores.AccomodationStore
 	stateStore        stores.StateStore
+	logStore          stores.LogStore
 }
 
 func NewStoreOccasionRepository(
@@ -143,6 +144,12 @@ func (r *StoreOccasionRepository) PopulateOccasion(occasion *models.Occasion) (*
 		return nil, err
 	}
 
+	//get the last log from store
+	log, err := r.logStore.GetLastFromOcassion(context.Background(), occasion.OccasionID)
+	if err != nil {
+		return nil, err
+	}
+
 	// Convert the result to a Occasion entity
 	return ModelToOccasion(
 		occasion,
@@ -150,6 +157,7 @@ func (r *StoreOccasionRepository) PopulateOccasion(occasion *models.Occasion) (*
 		ModelToEvent(event),
 		ModelToBooking(booking, ModelToAccomodation(accomodation)),
 		ModelToState(state),
+		log.IsInside,
 	), nil
 }
 
