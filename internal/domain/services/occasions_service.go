@@ -2,7 +2,6 @@ package services
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/foxinuni/quickpass-backend/internal/data/repo"
@@ -52,11 +51,7 @@ func (s *RepoOccassionsService) GetOccasionsForUser(user *entities.User, active 
 		if occasion.Booking != nil {
 			afterStart = time.Now().After(occasion.Booking.GetEntryDate())
 			beforeEnd = occasion.Booking.GetExitDate().Before(time.Now())
-			fmt.Print(occasion.Booking.GetEntryDate(), "  ", occasion.Booking.GetExitDate())
 		}
-		fmt.Print(afterStart)
-		fmt.Print("   ")
-		fmt.Print(beforeEnd)
 		if afterStart && beforeEnd {
 			filteredOccasions = append(filteredOccasions, occasion)
 		}

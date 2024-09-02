@@ -34,11 +34,13 @@ var backendSet = wire.NewSet(
 	routes.NewAuthRouter,
 	routes.NewMyOccasionsRouter,
 	routes.NewMyBookingsRouter,
+	routes.NewMyEventsRouter,
 
 	// Controllers
 	controllers.NewLoginController,
 	controllers.NewMyOccasionsController,
 	controllers.NewMyBookingsController,
+	controllers.NewMyEventsController,
 
 	// Strategies
 	auth.NewAuthServiceStrategy,
@@ -48,6 +50,7 @@ var backendSet = wire.NewSet(
 	services.NewJwtAuthService,
 	services.NewRepoStateService,
 	services.NewRepoBookingsService,
+	services.NewRepoEventsService,
 
 	// Repositories
 	repo.NewStoreOccasionRepository,

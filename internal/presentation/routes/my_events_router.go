@@ -1,22 +1,27 @@
 package routes
 
-/*
+import (
+	"github.com/foxinuni/quickpass-backend/internal/presentation/controllers"
+	"github.com/foxinuni/quickpass-backend/internal/presentation/middlewares"
+	"github.com/labstack/echo/v4"
+)
+
 type MyEventsRouter struct {
-	myBookingsController *controllers.MyEventsController
-	authStrategy middlewares.AuthStrategy
+	myEventsController *controllers.MyEventsController
+	authStrategy       middlewares.AuthStrategy
 }
 
-func NewMyEventsRouter(myBookingsController *controllers.MyEventsController, authStrategy middlewares.AuthStrategy) *MyBookingsRouter{
-	return &MyBookingsRouter{
-		myBookingsController: myBookingsController,
-		authStrategy: authStrategy,
+func NewMyEventsRouter(myEventsController *controllers.MyEventsController, authStrategy middlewares.AuthStrategy) *MyEventsRouter {
+	return &MyEventsRouter{
+		myEventsController: myEventsController,
+		authStrategy:       authStrategy,
 	}
 }
 
-func (mbr *MyBookingsRouter) RegisterRoutes(echo *echo.Echo){
+func (mbr *MyEventsRouter) RegisterRoutes(echo *echo.Echo) {
 	//creating group
-	myBookingsGroup := echo.Group("/my-bookings", middlewares.AuthMiddleware(mbr.authStrategy))
+	myBookingsGroup := echo.Group("/my_events", middlewares.AuthMiddleware(mbr.authStrategy))
 
 	//suscribing controller
-	myBookingsGroup.GET("", mbr.myBookingsController.GetAll)
-}*/
+	myBookingsGroup.GET("", mbr.myEventsController.GetAll)
+}

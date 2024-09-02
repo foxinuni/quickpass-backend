@@ -19,6 +19,7 @@ type QuickpassAPI struct {
 	authRouter        *routes.AuthRouter
 	myOccasionsRouter *routes.MyOccasionsRouter
 	myBookingsRouter  *routes.MyBookingsRouter
+	myEventsRouter    *routes.MyEventsRouter
 }
 
 func NewQuickpassAPI(
@@ -26,12 +27,14 @@ func NewQuickpassAPI(
 	authRouter *routes.AuthRouter,
 	myOccasionsRouter *routes.MyOccasionsRouter,
 	myBookingsRouter *routes.MyBookingsRouter,
+	myEventsRouter *routes.MyEventsRouter,
 ) *QuickpassAPI {
 	return &QuickpassAPI{
 		options:           options,
 		authRouter:        authRouter,
 		myOccasionsRouter: myOccasionsRouter,
 		myBookingsRouter:  myBookingsRouter,
+		myEventsRouter:    myEventsRouter,
 	}
 }
 
@@ -59,6 +62,7 @@ func (api *QuickpassAPI) Listen() error {
 	api.authRouter.RegisterRoutes(app)
 	api.myOccasionsRouter.RegisterRoutes(app)
 	api.myBookingsRouter.RegisterRoutes(app)
+	api.myEventsRouter.RegisterRoutes(app)
 
 	log.Info().Msgf("HTTP server is now listening on %s", api.options.GetListenAddress())
 	if err := app.Start(api.options.GetListenAddress()); err != nil {
