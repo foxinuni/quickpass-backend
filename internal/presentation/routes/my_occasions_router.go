@@ -19,12 +19,12 @@ func NewMyOccasionsRouter(myOccasionsController *controllers.MyOccasionsControll
 }
 
 func (mor *MyOccasionsRouter) RegisterRoutes(echo *echo.Echo) {
-	// Create a new group for the my occasions routes
-	myOccasionsGroup := echo.Group("/my-occasions", middlewares.AuthMiddleware(mor.authStrategy))
-
 	// Register the get all my occasions route
-	myOccasionsGroup.GET("", mor.myOccasionsController.GetAll)
+	echo.GET("/my_ocassions", mor.myOccasionsController.GetAll, middlewares.AuthMiddleware(mor.authStrategy))
 
 	// Register the get my occasion by ID route
-	myOccasionsGroup.GET("/:id", mor.myOccasionsController.Get)
+	echo.GET("/my_ocassions/:id", mor.myOccasionsController.Get, middlewares.AuthMiddleware(mor.authStrategy))
+
+	// Register the patch my occasion route
+	echo.PATCH("/my_ocassions/:id", mor.myOccasionsController.Update, middlewares.AuthMiddleware(mor.authStrategy))
 }

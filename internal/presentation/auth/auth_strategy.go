@@ -12,7 +12,7 @@ type AuthServiceStrategy struct {
 	authService services.AuthService
 }
 
-func NewAuthServiceStrategy(authService services.AuthService) *AuthServiceStrategy {
+func NewAuthServiceStrategy(authService services.AuthService) middlewares.AuthStrategy {
 	return &AuthServiceStrategy{
 		authService: authService,
 	}

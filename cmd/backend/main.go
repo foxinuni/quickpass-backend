@@ -3,13 +3,6 @@ package main
 import (
 	"os"
 
-	"github.com/foxinuni/quickpass-backend/internal/core"
-	"github.com/foxinuni/quickpass-backend/internal/data/repo"
-	"github.com/foxinuni/quickpass-backend/internal/domain/services"
-	"github.com/foxinuni/quickpass-backend/internal/presentation"
-	"github.com/foxinuni/quickpass-backend/internal/presentation/auth"
-	"github.com/foxinuni/quickpass-backend/internal/presentation/controllers"
-	"github.com/foxinuni/quickpass-backend/internal/presentation/routes"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -35,35 +28,13 @@ func init() {
 }
 
 func main() {
-	// Create store factory
-	storeFactory, err := core.NewPostgresStoreFactory(config)
+	// Create the Quickpass API
+	server, err := BootstrapServer(config)
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to create store factory")
+		log.Fatal().Err(err).Msg("Failed to bootstrap API")
 	}
 
-	// Create stores
-	userStore := storeFactory.NewUserStore()
-	sessionStore := storeFactory.NewSessionStore()
-
-	// Create repositories
-	userRepo := repo.NewStoreUserRepository(userStore)
-	sessionRepo := repo.NewStoreSessionRepository(sessionStore, userStore)
-
-	// Create services
-	authService := services.NewJwtAuthService(config, userRepo, sessionRepo)
-
-	// Create strategies & middlewares
-	authStrategy := auth.NewAuthServiceStrategy(authService)
-
-	// Create controllers
-	loginController := controllers.NewLoginController(authService)
-
-	// Create routers
-	authRouter := routes.NewAuthRouter(loginController, authStrategy)
-
-	// Create the Quickpass API
-	api := presentation.NewQuickpassAPI(config, authRouter)
-	if err := api.Listen(); err != nil {
+	if err := server.Listen(); err != nil {
 		log.Fatal().Err(err).Msg("Failed to start HTTP server")
 	}
 }

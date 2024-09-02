@@ -12,25 +12,25 @@ type StateService interface {
 	GetOrCreateState(name string) (*entities.State, error)
 }
 
-type StoreStateService struct {
+type RepoStateService struct {
 	stateRepo repo.StateRepository
 }
 
-func NewStoreStateService(stateRepo repo.StateRepository) StateService {
-	return &StoreStateService{
+func NewRepoStateService(stateRepo repo.StateRepository) StateService {
+	return &RepoStateService{
 		stateRepo: stateRepo,
 	}
 }
 
-func (s *StoreStateService) GetAllStates() ([]*entities.State, error) {
+func (s *RepoStateService) GetAllStates() ([]*entities.State, error) {
 	return s.stateRepo.GetAll()
 }
 
-func (s *StoreStateService) GetStateByID(id int) (*entities.State, error) {
+func (s *RepoStateService) GetStateByID(id int) (*entities.State, error) {
 	return s.stateRepo.GetById(id)
 }
 
-func (s *StoreStateService) GetOrCreateState(name string) (*entities.State, error) {
+func (s *RepoStateService) GetOrCreateState(name string) (*entities.State, error) {
 	state, err := s.stateRepo.GetByName(name)
 	if err != nil {
 		if err == stores.ErrStateNotFound {
