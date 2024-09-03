@@ -243,7 +243,7 @@
         Processing data = it inserts into the log table a new log, and it checks the previously last added to know if this one was inside or outside
         returning = it returns 1 if it's now outside or 0 if its now inside
         {
-            "outside": 0
+            "inside": false
         }
     
 
