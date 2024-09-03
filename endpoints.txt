@@ -250,3 +250,14 @@
         
     
 
+done:
+#admin
+-
+#client
+-POST= auth/login
+-POST= auth/logout
+-GET= my_occasions
+-PATCH= my_occasions/{id}
+-GET= my_events
+-GET= my_bookings
+-POST= actions

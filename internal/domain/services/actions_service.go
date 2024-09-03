@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/foxinuni/quickpass-backend/internal/data/repo"
@@ -47,7 +48,8 @@ func (as *RepoActionsService) NewAction(user *entities.User, occasionID int) (bo
 	if !(afterStart && beforeEnd) {
 		return false, ErrOccasionNotInCourse
 	}
-	if occasion.GetState().GetStateName() != "CONFIRMADO" {
+	if occasion.GetState().GetStateName() != "confirmed" {
+		fmt.Print(occasion.GetState().GetStateName())
 		return false, ErrOccasionNotConfirmed
 	}
 

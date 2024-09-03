@@ -47,11 +47,22 @@ func ModelToOccasion(occasions *models.Occasion, user *entities.User, event *ent
 }
 
 func OccasionToModel(occasion *entities.Occasion) *models.Occasion {
+	var eventID *int = nil
+	var bookingID *int = nil
+
+	if occasion.GetEvent() != nil{
+		var id int =  occasion.GetEvent().GetEventID()
+		eventID = &id
+	}
+	if occasion.GetBooking() != nil{
+		var id int =  occasion.GetBooking().GetBookingID()
+		bookingID = &id
+	}
 	return models.NewOccasion(
 		occasion.GetOccasionID(),
 		occasion.GetUser().GetUserID(),
-		occasion.GetEvent().GetEventID(),
-		occasion.GetBooking().GetBookingID(),
+		eventID,
+		bookingID,
 		occasion.GetState().GetStateID(),
 	)
 }
