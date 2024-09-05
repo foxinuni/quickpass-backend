@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/foxinuni/quickpass-backend/internal/domain/services"
+	"github.com/foxinuni/quickpass-backend/internal/presentation/dtos"
 	"github.com/labstack/echo/v4"
 )
 
@@ -43,5 +44,27 @@ func(ec *EventsController) GetOccasionsFromEvent(c echo.Context) error{
 
 //TO BE IMPLEMENTED
 func (ec * EventsController) InviteUsersToEvent(c echo.Context) error {
-	return nil
+	eventId, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid event ID")
+	}
+	//Validate DTO of list of occasionID's
+	var occasionsID dtos.UserXEvent
+	if err := c.Bind(&occasionsID); err != nil {
+		return err
+	}
+
+	//validate DTO 
+	if err := c.Validate(&occasionsID); err != nil {
+		return err
+	}
+	
+	number, err := ec.eventsService.InviteUsers(eventId, occasionsID.OccasionsID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"number" : number,
+	})
 }
