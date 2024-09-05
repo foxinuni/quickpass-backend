@@ -14,7 +14,7 @@ var ErrEventNotFound = errors.New("event not found")
 type EventFilter struct{}
 
 type EventStore interface {
-	GetAll(ctx context.Context, filter EventFilter) ([]models.Event, error)
+	GetAll(ctx context.Context) ([]models.Event, error)
 	GetById(ctx context.Context, id int) (*models.Event, error)
 	Create(ctx context.Context, event *models.Event) error
 	Update(ctx context.Context, event *models.Event) error
@@ -34,7 +34,7 @@ func NewPostgresEventStore(pool *pgxpool.Pool) *PostgresEventStore {
 	}
 }
 
-func (s *PostgresEventStore) GetAll(ctx context.Context, filter EventFilter) ([]models.Event, error) {
+func (s *PostgresEventStore) GetAll(ctx context.Context) ([]models.Event, error) {
 	var events []models.Event
 	rows, err := s.pool.Query(ctx, `SELECT event_id, start_date, end_date, address, name FROM events`)
 	if err != nil {

@@ -11,10 +11,11 @@ import (
 type OccasionLookupFilterOption func(*OccasionLookupFilter)
 
 type OccasionLookupFilter struct {
-	User    *entities.User
-	Event   *entities.Event
-	Booking *entities.Booking
-	State   *entities.State
+	User           *entities.User
+	Event          *entities.Event
+	Booking        *entities.Booking
+	State          *entities.State
+	TypeOfOccasion *bool
 }
 
 func DefaultOccasionLookupFilter() *OccasionLookupFilter {
@@ -45,6 +46,12 @@ func OccasionForState(state *entities.State) OccasionLookupFilterOption {
 	}
 }
 
+func OccasionForType(typeOfOccasion bool) OccasionLookupFilterOption {
+	return func(f *OccasionLookupFilter) {
+		f.TypeOfOccasion = &typeOfOccasion
+	}
+}
+
 func LookupToFilter(lookup *OccasionLookupFilter) stores.OccasionFilter {
 	var occasionFilter stores.OccasionFilter
 	if lookup.User != nil {
@@ -61,6 +68,10 @@ func LookupToFilter(lookup *OccasionLookupFilter) stores.OccasionFilter {
 
 	if lookup.State != nil {
 		occasionFilter.StateID = &lookup.State.StateID
+	}
+
+	if lookup.TypeOfOccasion != nil {
+		occasionFilter.TypeOccasion = lookup.TypeOfOccasion
 	}
 
 	return occasionFilter
@@ -81,6 +92,7 @@ type StoreOccasionRepository struct {
 	bookingStore      stores.BookingStore
 	accomodationStore stores.AccomodationStore
 	stateStore        stores.StateStore
+	logStore          stores.LogStore
 }
 
 func NewStoreOccasionRepository(
@@ -90,6 +102,7 @@ func NewStoreOccasionRepository(
 	bookingStore stores.BookingStore,
 	accomodationStore stores.AccomodationStore,
 	stateStore stores.StateStore,
+	logStore stores.LogStore,
 ) OccasionRepository {
 	return &StoreOccasionRepository{
 		occasionStore:     occasionStore,
@@ -98,6 +111,7 @@ func NewStoreOccasionRepository(
 		bookingStore:      bookingStore,
 		accomodationStore: accomodationStore,
 		stateStore:        stateStore,
+		logStore:          logStore,
 	}
 }
 
@@ -109,21 +123,28 @@ func (r *StoreOccasionRepository) PopulateOccasion(occasion *models.Occasion) (*
 	}
 
 	// Get the event from the store
-	event, err := r.eventStore.GetById(context.Background(), occasion.EventID)
-	if err != nil {
-		return nil, err
+	var event *models.Event
+	if occasion.EventID != nil {
+		event, err = r.eventStore.GetById(context.Background(), *occasion.EventID)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Get the booking from the store
-	booking, err := r.bookingStore.GetById(context.Background(), occasion.BookingID)
-	if err != nil {
-		return nil, err
-	}
+	var booking *models.Booking
+	var accomodation *models.Accomodation
+	if occasion.BookingID != nil {
+		booking, err = r.bookingStore.GetById(context.Background(), *occasion.BookingID)
+		if err != nil {
+			return nil, err
+		}
 
-	// Get the accomodation from the store
-	accomodation, err := r.accomodationStore.GetById(context.Background(), booking.AccomodationID)
-	if err != nil {
-		return nil, err
+		// Get the accomodation from the store
+		accomodation, err = r.accomodationStore.GetById(context.Background(), booking.AccomodationID)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Get the state from the store
@@ -132,13 +153,28 @@ func (r *StoreOccasionRepository) PopulateOccasion(occasion *models.Occasion) (*
 		return nil, err
 	}
 
+	//get the last log from store
+	log, err := r.logStore.GetLastFromOcassion(context.Background(), occasion.OccasionID)
+	if err != nil {
+		return nil, err
+	}
+
+	var eventEntity *entities.Event
+	if event != nil {
+		eventEntity = ModelToEvent(event)
+	}
+	var bookingEntity *entities.Booking
+	if booking != nil {
+		bookingEntity = ModelToBooking(booking, ModelToAccomodation(accomodation))
+	}
 	// Convert the result to a Occasion entity
 	return ModelToOccasion(
 		occasion,
 		ModelToUser(user),
-		ModelToEvent(event),
-		ModelToBooking(booking, ModelToAccomodation(accomodation)),
+		eventEntity,
+		bookingEntity,
 		ModelToState(state),
+		log,
 	), nil
 }
 

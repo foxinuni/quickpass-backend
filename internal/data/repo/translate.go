@@ -37,16 +37,32 @@ func LogToModel(log *entities.Log) *models.Log {
 	return models.NewLog(log.GetLogID(), log.GetOccasion().GetOccasionID(), log.GetIsInside(), log.GetTime())
 }
 
-func ModelToOccasion(occasions *models.Occasion, user *entities.User, event *entities.Event, booking *entities.Booking, state *entities.State) *entities.Occasion {
-	return entities.NewOccasion(occasions.OccasionID, user, event, booking, state)
+func ModelToOccasion(occasions *models.Occasion, user *entities.User, event *entities.Event, booking *entities.Booking, state *entities.State, lastLog *models.Log) *entities.Occasion {
+	var isInside bool = false
+	//is inside by default will be false, if there are no logs, then by default its outside, if there's a log, then we ask it if its inside or outside
+	if lastLog != nil {
+		isInside = lastLog.IsInside
+	}
+	return entities.NewOccasion(occasions.OccasionID, user, event, booking, state, isInside)
 }
 
 func OccasionToModel(occasion *entities.Occasion) *models.Occasion {
+	var eventID *int = nil
+	var bookingID *int = nil
+
+	if occasion.GetEvent() != nil{
+		var id int =  occasion.GetEvent().GetEventID()
+		eventID = &id
+	}
+	if occasion.GetBooking() != nil{
+		var id int =  occasion.GetBooking().GetBookingID()
+		bookingID = &id
+	}
 	return models.NewOccasion(
 		occasion.GetOccasionID(),
 		occasion.GetUser().GetUserID(),
-		occasion.GetEvent().GetEventID(),
-		occasion.GetBooking().GetBookingID(),
+		eventID,
+		bookingID,
 		occasion.GetState().GetStateID(),
 	)
 }

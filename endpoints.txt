@@ -1,0 +1,263 @@
+ #BEFORE ALL
+    STATES table needs to be poblated with states 'REGISTERED', 'INVITED', 'CONFIRMED'
+
+
+#FOR ADMIN WEBSITE
+    endpoint = /occasions
+        mode = POST
+        data received in body = Excel file with structure (see excel example):
+                email, number, event_name, start_date, end_date, event_address, booking_address, entry_date, leaving_date, is_house
+        processing logic =
+                for each row do:
+                    *if email already exists in USER table, then get its pk, if not, insert email-number into USER
+                    *if event_name is not empty:
+                        *if event_name already exists in table EVENT get its PK, if not, then insert event_name - start_date - end_date - event_address into EVENT table
+                        *insert into USER_X_OCCASION the PK of the user, the PK of the event and the PK of the "REGISTERED" state in STATES table
+                    *if event_name is empty:
+                        *if booking_address already exists in ACCOMODATIONS table, then get its PK, if not, insert booking_address - is_house into ACCOMODATIONS table
+                        *insert into BOOKINGS table entry_date - loeaving_date - PK of ACCOMODATIONS, save PK
+                        *insert into USER_X_OCCASION the PK of the user, the PK of the booking, and the PK of the "REGISTERED" state in STATES table
+        returning =
+            {
+                "number": n, //where n is the number of USER_X_OCCASION rows inserted
+            }
+    
+    endpoint = /events
+        mode = GET
+        data received in the body = NOTHING
+        Processing Logic = SELECT * FROM EVENT .and conversion to DTO
+        returning = list of events, following this structure:
+            {
+                "events": [
+                    {
+                        "event_id" : serial_id,
+                        "name" : "nombre",
+                        "start_date" : "yyy-MM-dd",
+                        "end_date" : "yyy-MM-dd",
+                        "address" : "address"
+                    },
+                ]
+            }
+
+    endpoint = /events/{id}
+        mode = GET
+        data received in the body = NOTHING
+        Processing Logic = SELECT * FROM USER_X_OCCASIONS UO
+                            INNER JOIN USERS U ON U.user_id = UO.user_id 
+                            INNER JOIN STATES S ON S.state_id = UO.state_id
+                            WHERE UO.event_id = ? 
+                            .and conversion to DTO
+        returning = list of users registered for certain event, with this structure (important, the state must be the value, not the ID):
+            {
+                "users": [
+                    {
+                        "user_id" : serial_id,
+                        "email": "email",
+                        "number" : "number",
+                        "status" : "REGISTERED",    //OR THE STATE
+                    }
+                ]
+            }
+    
+    endpoint = events/{id}/Invite
+        mode = POST
+        data received in the body = A list of serial ID's, those are the ID's of the USER_X_OCCASION to which to send the email. (if the list is empty, means, to send to all users for that event which state is REGISTERED)
+            {
+                "user_x_event": [
+                    serial_id,
+                    serial_id
+                ]
+            }
+        Processing logic = SELECT * FROM USER_X_OCCASION  UE 
+                            INNER JOIN USER U ON U.user_id = UE.user_id
+                            INNER JOIN STATES S ON S.state_id = UE.state_id
+                            WHERE UE.EVENT_ID IS NOT NULL 
+                            AND S.state  = "REGISTERED"
+                            AND U.user_id = ?. That query to confirm that the user is indeed registered in an event (THE REGISTER STATE means that he hasn't confirmed through the app).
+                            then with that info of the user, sent the email.
+        returning = number of emails sent:
+            {
+                "number" : n,
+            }
+    
+    endpoint = /bookings
+        mode = GET
+        data received in the body = NOTHING
+        Processing logic = SELECT * FROM BOOKINGS B
+                            INNER JOIN USER_X_OCCASION UO ON B.booking_id = UO.booking_id
+                            INNER JOIN USERS U ON U.user_id = UO.user_id
+        returning = list of bookings with the user associated
+            {
+                "bookings": [
+                    {
+                        "booking_id" : serial_id,
+                        "entry_date" : "yyyy-MM-dd",
+                        "leaving_date" : "yyyy-MM-dd",
+                        "address" : "address",
+                        "email" : "email@.com"
+                    },
+                ]
+            }
+
+    endpoint = /bookings/Invite
+		mode = POST
+		data received in the body = A list of serial ID's, those are the ID's of the BOOKINGS to which to send the email. (if the list is empty, means, to send to all users for that event which state is REGISTERED)
+            {
+                "ocassions": [
+                    serial_id,
+                    serial_id
+                ]
+            }
+        Processing logic = SELECT * FROM BOOKINGS B
+                            INNER JOIN OCCASIONS O ON O.booking_id = B.booking_id
+                            INNER JOIN USERS U ON U.user_id = O.user_id
+        returning = number of emails sent:
+            {
+                "number" : n,
+            }
+    
+    endpoint = /sessions
+        mode = GET
+        data received in the body = NOTHING
+        Processing logic = Basic query to the sessions table with a join with the user
+        returning = list of sessions (disabled or enabled):
+            {
+                "sessions": [
+                    {
+                        "session_id" : serial_id,
+                        "phone_model" : "model",
+                        "enabled" : true,
+                        "IMEI" : "IMIE_NUMBER",
+                        "email" : "email@.com",
+                        "number" : 3008522437
+                    }
+                ]
+            }
+    
+    endpoint = /sessions/{id}
+        mode = PATCH
+        data received in the body = the new value of enabled.
+            {
+                "enabled" : true
+            }
+        Processing logic = to the session associated with that ID, it updates if it's enabled
+        returning = nothing important, doesn't matter, maybe confirmation through ID of session
+            {
+                "session_id" : serial_id
+            }
+
+    //here it's missing for now the endpoint/websocket/mqtt to see live logs of the events
+    //which means, the admin must be able to see in real time whenever a row is inserted into LOGS table
+    //and the info of it, I leave this for the last but, the idea is to be able to suscribe to a certain channel
+    //I mean, not to catch all rows inserted to LOGS table, but lets say, admin clicks on a event, then 
+    //it must be shown a real time log of each person that enters or gets out, but only for that event
+
+
+//ANNOTATION FOR ME OF THE FUTURE WHEN DEVELOPING THE FRONTEND: The clients login page only appears once when the app is downloaded
+//the login is only made once, that gets the jwt token, which must be stored in the device, then on, the next times, once it starts
+//it must recognize that it already has the JWT token stored, so it goes directly to the main page, where it will do the requests with 
+//the JWT token, if the server response is a failure, then that's how we will know that the admin hasn't enabled the token,
+
+#FOR CLIENT APP
+    endpoint = /login
+        mode = POST
+        data received in the body = 
+            {
+                "email" : "juan@.com",
+                "number" : 3008522437,
+                "phone_model" : "model",
+                "IMEI" : "123345"
+            }
+        Processing logic = Inserts into session the for now disabled session, it uses the email and number to connect with the user
+        returning = the generated (by now disabled, JWT token):
+            {
+                "token" : "token",
+            }
+
+    endpoint = /my_occasions?active={true}
+        mode = GET
+        data received in the body = NOTHING
+        Processing logic =The backend gets the user_id through the session of the user (JWT), with that user gets the basic info of the ocassions
+                either event or booking, and it supports the filter, the filter active means, to check the dates. So for instance it checks if the current
+                date is in the range of entry - start dates and end-leaving dates of the ocassion.
+                IT MUST RETURN ONLY THE ONES WHICH STATE IS "CONFIRMED", THIS IS INDEPENDENT OF THE FILTER, IS A MUST.
+                it must return in "outside" 0 (if its currently inside) or 1 (outside), it checks the LOG table to do so.
+        returning = the list of ocassions
+            {
+                "ocassions": [
+                    "ocassion_id" : "id",
+                    "ending_date" : "yyyy-MM-dd",
+                    "address" : "address",
+                    "type": "event/booking"
+                    "outside" : 0,
+                ]
+            }
+    
+    endpoint = /my_events
+        mode = GET
+        data received in the body  = NOTHING
+        Processing logic = The backend gets the user_id through the session of the user (JWT), with that it gets the events 
+            of that user (only the events with state INVITED or CONFIRMED, not REGISTERD, since the admin hasn't invited him)
+        returning = list with the events of the user
+            {
+                "events": [
+                    "ocassion_id" : serial_id,
+                    "start_date" : "yyy-MM-dd",
+                    "end_date" : "yyyy-MM-dd",
+                    "address" : "address",
+                    "status" : "INVITED",
+                    "event_name" : "name",
+                ]
+            }
+
+    endpoint = /my_bookings
+        mode = GET
+        data received in the body = NOTHING
+        Processing logic = The backend gets the user_id through the session of the user (JWT), with that it gets the bookings of that user
+        returning = list with the events of the user
+            {
+                "bookings": [
+                    "ocassion_id" : serial_id,
+                    "entry_date" : "yyy-MM-dd",
+                    "leaving_date" : "yyyy-MM-dd",
+                    "status" : "INVITED",
+                    "address" : "address",  //recall using accomodations table to get the address value
+                ]
+            }
+    
+    endpoint = /my_ocassion/{id}
+        mode = PATCH
+        data received in the body = if this message is sent, means that we are confirming, so the body doesn't matter, but just in case:
+            {
+                "confirming" : true,
+            }
+        Processing logic = It changes the state of that ocassion to the state "CONFIRMED"
+        returning = Doesn't matter neither, but just a confirmation could be, or the ID of the occasion.
+
+    endpoint = /actions
+        mode = POST 
+        data received in the body = the ID of the occasion related with the action.
+            {
+                "ocassion_id" : serial_id
+            }
+        Processing data = it inserts into the log table a new log, and it checks the previously last added to know if this one was inside or outside
+        returning = it returns 1 if it's now outside or 0 if its now inside
+        {
+            "inside": false
+        }
+    
+
+        
+    
+
+done:
+#admin
+-
+#client
+-POST= auth/login
+-POST= auth/logout
+-GET= my_occasions
+-PATCH= my_occasions/{id}
+-GET= my_events
+-GET= my_bookings
+-POST= actions

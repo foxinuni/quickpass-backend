@@ -42,9 +42,16 @@ func (s *RepoOccassionsService) GetOccasionsForUser(user *entities.User, active 
 
 	var filteredOccasions []*entities.Occasion
 	for _, occasion := range occasions {
-		afterStart := occasion.Event.GetStartDate().After(time.Now())
-		beforeEnd := occasion.Event.GetStartDate().Before(time.Now())
-
+		var afterStart bool
+		var beforeEnd bool
+		if occasion.Event != nil {
+			afterStart = time.Now().After(occasion.Event.GetStartDate())
+			beforeEnd = occasion.Event.GetStartDate().Before(time.Now())
+		}
+		if occasion.Booking != nil {
+			afterStart = time.Now().After(occasion.Booking.GetEntryDate())
+			beforeEnd = occasion.Booking.GetExitDate().Before(time.Now())
+		}
 		if afterStart && beforeEnd {
 			filteredOccasions = append(filteredOccasions, occasion)
 		}

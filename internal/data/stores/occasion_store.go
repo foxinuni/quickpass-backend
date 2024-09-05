@@ -2,6 +2,7 @@ package stores
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 
 	"github.com/foxinuni/quickpass-backend/internal/data/models"
@@ -12,10 +13,11 @@ import (
 var ErrOccasionNotFound = errors.New("occasion not found")
 
 type OccasionFilter struct {
-	UserID    *int
-	EventID   *int
-	BookingID *int
-	StateID   *int
+	UserID       *int
+	EventID      *int
+	BookingID    *int
+	StateID      *int
+	TypeOccasion *bool //true if its event, false if its booking
 }
 
 type OccasionStore interface {
@@ -50,7 +52,8 @@ func (s *PostgresOccasionStore) GetAll(ctx context.Context, filter OccasionFilte
 			AND (CASE WHEN $2::int IS NULL THEN TRUE ELSE event_id = $2::int END)
 			AND (CASE WHEN $3::int IS NULL THEN TRUE ELSE booking_id = $3::int END)
 			AND (CASE WHEN $4::int IS NULL THEN TRUE ELSE state_id = $4::int END)
-	`, filter.UserID, filter.EventID, filter.BookingID, filter.StateID)
+			AND (CASE WHEN $5::bool IS NULL THEN TRUE WHEN $5::bool = TRUE THEN event_id IS NOT NULL ELSE booking_id IS NOT NULL END)
+	`, filter.UserID, filter.EventID, filter.BookingID, filter.StateID, filter.TypeOccasion)
 	if err != nil {
 		return nil, err
 	}
@@ -58,10 +61,21 @@ func (s *PostgresOccasionStore) GetAll(ctx context.Context, filter OccasionFilte
 
 	for rows.Next() {
 		var occasion models.Occasion
-		if err := rows.Scan(&occasion.OccasionID, &occasion.UserID, &occasion.EventID, &occasion.BookingID, &occasion.StateID); err != nil {
+		var eventID, bookingID sql.NullInt32 // use sql.NullInt32 to handle NULL values
+
+		if err := rows.Scan(&occasion.OccasionID, &occasion.UserID, &eventID, &bookingID, &occasion.StateID); err != nil {
 			return nil, err
 		}
 
+		if eventID.Valid {
+			eventIDInt := int(eventID.Int32)
+			occasion.EventID = &eventIDInt
+		}
+
+		if bookingID.Valid {
+			bookingIDInt := int(bookingID.Int32)
+			occasion.BookingID = &bookingIDInt
+		}
 		occasions = append(occasions, occasion)
 	}
 

@@ -33,10 +33,18 @@ var backendSet = wire.NewSet(
 	// Routers
 	routes.NewAuthRouter,
 	routes.NewMyOccasionsRouter,
+	routes.NewMyBookingsRouter,
+	routes.NewMyEventsRouter,
+	routes.NewActionsRouter,
+	routes.NewEventsRouter,
 
 	// Controllers
 	controllers.NewLoginController,
 	controllers.NewMyOccasionsController,
+	controllers.NewMyBookingsController,
+	controllers.NewMyEventsController,
+	controllers.NewActionsController,
+	controllers.NewEventsController,
 
 	// Strategies
 	auth.NewAuthServiceStrategy,
@@ -45,12 +53,17 @@ var backendSet = wire.NewSet(
 	services.NewRepoOccassionsService,
 	services.NewJwtAuthService,
 	services.NewRepoStateService,
+	services.NewRepoBookingsService,
+	services.NewRepoActionsService,
+	services.NewRepoEventsService,
 
 	// Repositories
 	repo.NewStoreOccasionRepository,
 	repo.NewStoreUserRepository,
 	repo.NewStoreSessionRepository,
 	repo.NewStoreStateRepository,
+	repo.NewStoreLogRepository,
+	repo.NewStoreEventRepository,
 
 	// Stores
 	core.BuildUserStore,
@@ -60,6 +73,7 @@ var backendSet = wire.NewSet(
 	core.BuildStateStore,
 	core.BuildOccasionStore,
 	core.BuildAccomoStore,
+	core.BuildLogStore,
 
 	// Store factory
 	core.NewPostgresStoreFactory, // This is the factory that creates all stores
