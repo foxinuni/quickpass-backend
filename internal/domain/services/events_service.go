@@ -7,13 +7,15 @@ import (
 
 type EventsService interface {
 	GetEventsForUser(user *entities.User) ([]*entities.Occasion, error)
+	GetOccasionsFromEvent(eventId int)([]*entities.Occasion, error)
+	GetAllEvents()([]*entities.Event, error)
 }
 
 var _ EventsService = (*RepoEventsService)(nil)
 
 type RepoEventsService struct {
-	//bookingRepo repo.BookingRepository
 	occasionRepo repo.OccasionRepository
+	eventRepo repo.EventRepository
 }
 
 func NewRepoEventsService(occasionRepo repo.OccasionRepository) EventsService {
@@ -24,12 +26,32 @@ func NewRepoEventsService(occasionRepo repo.OccasionRepository) EventsService {
 
 func (s *RepoEventsService) GetEventsForUser(user *entities.User) ([]*entities.Occasion, error) {
 	//occasion for type true means events
-	bookings, err := s.occasionRepo.GetAll(repo.OccasionForType(true))
+	events, err := s.occasionRepo.GetAll(repo.OccasionForType(true), repo.OccasionForUser(user))
 
 	if err != nil {
 		return nil, err
 	}
 
 	//if there was no error then it returns the bookings
-	return bookings, nil
+	return events, nil
+}
+
+func (s *RepoEventsService) GetOccasionsFromEvent(eventId int)([]*entities.Occasion, error){
+	event, err:= s.eventRepo.GetById(eventId)
+	if err != nil {
+		return nil, err
+	}
+	occasions, err := s.occasionRepo.GetAll(repo.OccasionForEvent(event))
+	if err != nil {
+		return nil, err
+	}
+	return occasions, nil
+}
+
+func (s *RepoEventsService) GetAllEvents()([]*entities.Event, error){
+	events, err := s.eventRepo.GetAll()
+	if err != nil{
+		return nil, err
+	}
+	return events, nil
 }

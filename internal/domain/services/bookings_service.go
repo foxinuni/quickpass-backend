@@ -12,7 +12,6 @@ type BookingsService interface {
 var _ BookingsService = (*RepoBookingsService)(nil)
 
 type RepoBookingsService struct {
-	//bookingRepo repo.BookingRepository
 	occasionRepo repo.OccasionRepository
 }
 
@@ -24,7 +23,7 @@ func NewRepoBookingsService(occasionRepo repo.OccasionRepository) BookingsServic
 
 func (s *RepoBookingsService) GetBookingsForUser(user * entities.User) ([]*entities.Occasion, error){
 	//occasion for type false means bookings
-	bookings, err := s.occasionRepo.GetAll(repo.OccasionForType(false))
+	bookings, err := s.occasionRepo.GetAll(repo.OccasionForType(false), repo.OccasionForUser(user))
 
 	if err != nil {
 		return nil, err
