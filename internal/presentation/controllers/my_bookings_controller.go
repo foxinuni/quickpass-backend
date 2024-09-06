@@ -12,31 +12,30 @@ type MyBookingsController struct {
 	bookingService services.BookingsService
 }
 
-//constructor or initializer for the struct
-func NewMyBookingsController(bookingService services.BookingsService) *MyBookingsController{
+// constructor or initializer for the struct
+func NewMyBookingsController(bookingService services.BookingsService) *MyBookingsController {
 	return &MyBookingsController{
 		bookingService: bookingService,
 	}
 }
 
-func(mbc *MyBookingsController) GetAll(c echo.Context) error {
+func (mbc *MyBookingsController) GetAll(c echo.Context) error {
 	//getting the user from the request
 	user, ok := c.Get("user").(*entities.User)
 	//if there's no user then return error
-	if !ok{
+	if !ok {
 		return echo.NewHTTPError(http.StatusInternalServerError, "user required but not found")
 	}
 
-	//getting bookings from the service
-	bookings, err := mbc.bookingService.GetBookingsForUser(user)
-	if err != nil{
+	//getting occasions from the service
+	occasions, err := mbc.bookingService.GetBookingsForUser(user)
+	if err != nil {
 		return err
 	}
 
 	type GetAllResponse struct {
-		Bookings []*entities.Occasion `json:"occasions"`
+		Occasions []*entities.Occasion `json:"occasions"`
 	}
 
-	return c.JSON(http.StatusOK, GetAllResponse{Bookings: bookings})
-
+	return c.JSON(http.StatusOK, GetAllResponse{Occasions: occasions})
 }

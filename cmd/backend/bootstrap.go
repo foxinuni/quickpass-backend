@@ -31,6 +31,7 @@ var backendSet = wire.NewSet(
 	presentation.NewQuickpassAPI,
 
 	// Routers
+	routes.NewBookingsRouter,
 	routes.NewAuthRouter,
 	routes.NewMyOccasionsRouter,
 	routes.NewMyBookingsRouter,
@@ -41,6 +42,7 @@ var backendSet = wire.NewSet(
 	routes.NewOccasionsRouter,
 
 	// Controllers
+	controllers.NewBookingsController,
 	controllers.NewOccasionsController,
 	controllers.NewLoginController,
 	controllers.NewMyOccasionsController,

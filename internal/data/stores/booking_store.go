@@ -11,7 +11,9 @@ import (
 
 var ErrBookingNotFound = errors.New("booking not found")
 
-type BookingFilter struct{}
+type BookingFilter struct {
+	UserID *int
+}
 
 type BookingStore interface {
 	GetAll(ctx context.Context, filter BookingFilter) ([]models.Booking, error)

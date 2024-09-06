@@ -52,7 +52,7 @@ func OccasionForType(typeOfOccasion bool) OccasionLookupFilterOption {
 	}
 }
 
-func LookupToFilter(lookup *OccasionLookupFilter) stores.OccasionFilter {
+func OccasionLookupToFilter(lookup *OccasionLookupFilter) stores.OccasionFilter {
 	var occasionFilter stores.OccasionFilter
 	if lookup.User != nil {
 		occasionFilter.UserID = &lookup.User.UserID
@@ -185,7 +185,7 @@ func (r *StoreOccasionRepository) GetAll(filters ...OccasionLookupFilterOption) 
 	}
 
 	// Get the occasion from the store
-	filter := LookupToFilter(lookup)
+	filter := OccasionLookupToFilter(lookup)
 	occasions, err := r.occasionStore.GetAll(context.Background(), filter)
 	if err != nil {
 		return nil, err
