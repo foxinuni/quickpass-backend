@@ -51,8 +51,9 @@ var backendSet = wire.NewSet(
 
 	// Services
 	services.NewExcelImportService,
-	services.NewRepoOccassionsService,
 	services.NewJwtAuthService,
+	services.NewSendgridEmailService,
+	services.NewRepoOccassionsService,
 	services.NewRepoStateService,
 	services.NewRepoBookingsService,
 	services.NewRepoActionsService,
@@ -87,6 +88,7 @@ func BootstrapServer(options *core.ApplicationConfig) (*presentation.QuickpassAP
 	wire.Build(
 		backendSet,
 		wire.Bind(new(presentation.QuickpassAPIOptions), new(*core.ApplicationConfig)),
+		wire.Bind(new(services.SendgridEmailServiceOptions), new(*core.ApplicationConfig)),
 		wire.Bind(new(services.JwtAuthServiceOptions), new(*core.ApplicationConfig)),
 		wire.Bind(new(core.PgStoreFactoryOptions), new(*core.ApplicationConfig)),
 	)

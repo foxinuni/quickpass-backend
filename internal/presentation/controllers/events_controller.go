@@ -48,17 +48,17 @@ func (ec *EventsController) InviteUsersToEvent(c echo.Context) error {
 	}
 
 	// validate DTO of list of occasionID's
-	var occasionsID dtos.UserXEvent
-	if err := c.Bind(&occasionsID); err != nil {
+	var userXEvent dtos.UserXEvent
+	if err := c.Bind(&userXEvent); err != nil {
 		return err
 	}
 
 	// validate DTO
-	if err := c.Validate(&occasionsID); err != nil {
+	if err := c.Validate(&userXEvent); err != nil {
 		return err
 	}
 
-	number, err := ec.eventsService.InviteUsers(eventId, occasionsID.OccasionsID)
+	number, err := ec.eventsService.InviteUsers(eventId, userXEvent.OccasionsID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
