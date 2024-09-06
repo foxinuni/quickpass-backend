@@ -8,6 +8,7 @@ import (
 )
 
 type SessionRepository interface {
+	GetAll() ([]*entities.Session, error)
 	GetById(sessionID int) (*entities.Session, error)
 	GetByToken(token string) (*entities.Session, error)
 	Create(session *entities.Session) error
@@ -25,6 +26,28 @@ func NewStoreSessionRepository(sessionStore stores.SessionStore, userStore store
 		sessionStore: sessionStore,
 		userStore:    userStore,
 	}
+}
+
+func (r *StoreSessionRepository) GetAll() ([]*entities.Session, error) {
+	// Get the sessions from the store
+	sessions, err := r.sessionStore.GetAll(context.Background(), stores.SessionFilter{})
+	if err != nil {
+		return nil, err
+	}
+
+	var result []*entities.Session
+	for _, s := range sessions {
+		u, err := r.userStore.GetById(context.Background(), s.UserID)
+		if err != nil {
+			return nil, err
+		}
+
+		user := ModelToUser(u)
+		session := ModelToSession(&s, user)
+		result = append(result, session)
+	}
+
+	return result, nil
 }
 
 func (r *StoreSessionRepository) GetById(sessionID int) (*entities.Session, error) {
