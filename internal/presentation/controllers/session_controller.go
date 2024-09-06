@@ -1,7 +1,11 @@
 package controllers
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/foxinuni/quickpass-backend/internal/domain/services"
+	"github.com/foxinuni/quickpass-backend/internal/presentation/dtos"
 	"github.com/labstack/echo/v4"
 )
 
@@ -15,11 +19,36 @@ func NewSessionController(sessionService services.SessionService) *SessionContro
 	}
 }
 
-func (c *SessionController) GetAll(echo echo.Context) error {
-	sessions, err := c.sessionService.GetAllSessions()
+func (sc *SessionController) GetAll(c echo.Context) error {
+	sessions, err := sc.sessionService.GetAllSessions()
 	if err != nil {
 		return err
 	}
 
-	return echo.JSON(200, sessions)
+	return c.JSON(200, sessions)
+}
+
+func (sc *SessionController) Update(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(400, "invalid session ID")
+	}
+
+	// Bind data to DTO
+	var sessionDTO dtos.SessionPatchDTO
+	if err := c.Bind(&sessionDTO); err != nil {
+		return err
+	}
+
+	// Validate DTO
+	if err := c.Validate(&sessionDTO); err != nil {
+		return err
+	}
+
+	// Call the service
+	if err := sc.sessionService.EnableSession(id, sessionDTO.Enabled); err != nil {
+		return err
+	}
+
+	return c.NoContent(http.StatusOK)
 }
