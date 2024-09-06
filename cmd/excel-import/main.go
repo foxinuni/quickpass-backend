@@ -88,12 +88,12 @@ func main() {
 	}
 
 	log.Info().Msgf("Importing from file %q...", file)
-	if err := importService.ImportFromFile(reader); err != nil {
+	if _, err := importService.ImportFromFile(reader); err != nil {
 		panic(err)
 	}
 }
 
-func buildImportService(_ *core.ApplicationConfig) (*services.ExcelImportService, error) {
+func buildImportService(_ *core.ApplicationConfig) (services.ImportService, error) {
 	wire.Build(
 		importSet,
 		wire.Bind(new(core.PgStoreFactoryOptions), new(*core.ApplicationConfig)),

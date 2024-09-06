@@ -38,8 +38,10 @@ var backendSet = wire.NewSet(
 	routes.NewActionsRouter,
 	routes.NewEventsRouter,
 	routes.NewSessionsRouter,
+	routes.NewOccasionsRouter,
 
 	// Controllers
+	controllers.NewOccasionsController,
 	controllers.NewLoginController,
 	controllers.NewMyOccasionsController,
 	controllers.NewMyBookingsController,

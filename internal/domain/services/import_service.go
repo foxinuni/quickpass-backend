@@ -14,7 +14,7 @@ import (
 )
 
 type ImportService interface {
-	ImportFromFile(reader io.Reader) error
+	ImportFromFile(reader io.Reader) (int, error)
 }
 
 type ExcelImportService struct {
@@ -33,7 +33,7 @@ func NewExcelImportService(
 	bookingRepo repo.BookingRepository,
 	occasionRepo repo.OccasionRepository,
 	stateService StateService,
-) *ExcelImportService {
+) ImportService {
 	return &ExcelImportService{
 		userRepo:     userRepo,
 		eventRepo:    event,
@@ -44,21 +44,22 @@ func NewExcelImportService(
 	}
 }
 
-func (s *ExcelImportService) ImportFromFile(reader io.Reader) error {
+func (s *ExcelImportService) ImportFromFile(reader io.Reader) (int, error) {
 	f, err := excelize.OpenReader(reader)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer f.Close()
 
 	// Get all the rows for the first sheet
 	row := 3
+	counter := 0
 	sheet := f.GetSheetName(0)
 
 	// Get or create state
 	state, err := s.stateService.GetOrCreateState(StateRegistered)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	for {
@@ -71,44 +72,45 @@ func (s *ExcelImportService) ImportFromFile(reader io.Reader) error {
 
 		// Get or create user
 		if err := s.getOrCreateUser(user); err != nil {
-			return err
+			return 0, err
 		}
 
 		event, err := s.parseEvent(f, sheet, row)
 		if err != nil && err != ErrNameEmpty {
-			return err
+			return 0, err
 		}
 
 		// Get or create event
 		if event != nil {
 			if err := s.getOrCreateEvent(event); err != nil {
-				return err
+				return 0, err
 			}
 		}
 
 		accomodation, booking, err := s.parseBooking(f, sheet, row)
 		if err != nil && err != ErrAccAddressEmpty {
-			return err
+			return 0, err
 		}
 
 		// Get or create booking
 		if accomodation != nil && booking != nil {
 			if err := s.getOrCreateBooking(accomodation, booking); err != nil {
-				return err
+				return 0, err
 			}
 		}
 
 		// Create occasion
 		occasion := entities.NewOccasion(0, user, event, booking, state, false)
 		if err := s.occasionRepo.Create(occasion); err != nil {
-			return err
+			return 0, err
 		}
 
 		log.Debug().Msgf("Imported (user: %v, event: %v, booking: %v)", user, event, booking)
 		row++
+		counter++
 	}
 
-	return nil
+	return counter, nil
 }
 
 var ErrEmailEmpty = fmt.Errorf("email is empty")
