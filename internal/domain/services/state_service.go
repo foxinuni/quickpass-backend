@@ -6,6 +6,13 @@ import (
 	"github.com/foxinuni/quickpass-backend/internal/domain/entities"
 )
 
+var (
+	StateRegistered = "registered"
+	StateInvited    = "invited"
+	StateConfirmed  = "confirmed"
+	StateDeclined   = "declined"
+)
+
 type StateService interface {
 	GetAllStates() ([]*entities.State, error)
 	GetStateByID(id int) (*entities.State, error)

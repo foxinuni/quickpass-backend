@@ -50,6 +50,7 @@ var backendSet = wire.NewSet(
 	auth.NewAuthServiceStrategy,
 
 	// Services
+	services.NewExcelImportService,
 	services.NewRepoOccassionsService,
 	services.NewJwtAuthService,
 	services.NewRepoStateService,
@@ -64,6 +65,8 @@ var backendSet = wire.NewSet(
 	repo.NewStoreStateRepository,
 	repo.NewStoreLogRepository,
 	repo.NewStoreEventRepository,
+	repo.NewStoreAccomodationRepository,
+	repo.NewStoreBookingRepository,
 
 	// Stores
 	core.BuildUserStore,
@@ -79,13 +82,13 @@ var backendSet = wire.NewSet(
 	core.NewPostgresStoreFactory, // This is the factory that creates all stores
 )
 
-func BootstrapServer(options *ApplicationConfig) (*presentation.QuickpassAPI, error) {
+func BootstrapServer(options *core.ApplicationConfig) (*presentation.QuickpassAPI, error) {
 	// Annotate options with wire.Build
 	wire.Build(
 		backendSet,
-		wire.Bind(new(presentation.QuickpassAPIOptions), new(*ApplicationConfig)),
-		wire.Bind(new(services.JwtAuthServiceOptions), new(*ApplicationConfig)),
-		wire.Bind(new(core.PgStoreFactoryOptions), new(*ApplicationConfig)),
+		wire.Bind(new(presentation.QuickpassAPIOptions), new(*core.ApplicationConfig)),
+		wire.Bind(new(services.JwtAuthServiceOptions), new(*core.ApplicationConfig)),
+		wire.Bind(new(core.PgStoreFactoryOptions), new(*core.ApplicationConfig)),
 	)
 
 	return nil, nil

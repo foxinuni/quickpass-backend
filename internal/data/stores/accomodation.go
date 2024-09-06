@@ -16,6 +16,7 @@ type AccomodationFilter struct{}
 type AccomodationStore interface {
 	GetAll(ctx context.Context, filter AccomodationFilter) ([]models.Accomodation, error)
 	GetById(ctx context.Context, id int) (*models.Accomodation, error)
+	GetByAddress(ctx context.Context, address string) (*models.Accomodation, error)
 	Create(ctx context.Context, accomodation *models.Accomodation) error
 	Update(ctx context.Context, accomodation *models.Accomodation) error
 	Delete(ctx context.Context, id int) error
@@ -58,6 +59,20 @@ func (s *PostgresAccomodationStore) GetAll(ctx context.Context, filter Accomodat
 func (s *PostgresAccomodationStore) GetById(ctx context.Context, id int) (*models.Accomodation, error) {
 	var accomodation models.Accomodation
 	row := s.pool.QueryRow(ctx, `SELECT acc_id, is_house, address FROM accomodations WHERE acc_id = $1`, id)
+	if err := row.Scan(&accomodation.AccomodationID, &accomodation.IsHouse, &accomodation.Address); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrAccomodationNotFound
+		}
+
+		return nil, err
+	}
+
+	return &accomodation, nil
+}
+
+func (s *PostgresAccomodationStore) GetByAddress(ctx context.Context, address string) (*models.Accomodation, error) {
+	var accomodation models.Accomodation
+	row := s.pool.QueryRow(ctx, `SELECT acc_id, is_house, address FROM accomodations WHERE address = $1`, address)
 	if err := row.Scan(&accomodation.AccomodationID, &accomodation.IsHouse, &accomodation.Address); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrAccomodationNotFound

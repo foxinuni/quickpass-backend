@@ -3,12 +3,13 @@ package main
 import (
 	"os"
 
+	"github.com/foxinuni/quickpass-backend/internal/core"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
-var config *ApplicationConfig
+var config *core.ApplicationConfig
 
 func init() {
 	// Pretty logger
@@ -20,7 +21,7 @@ func init() {
 	}
 
 	// load configuration
-	if c, err := LoadConfig(); err != nil {
+	if c, err := core.LoadConfig(); err != nil {
 		log.Fatal().Err(err).Msg("Failed to load configuration")
 	} else {
 		config = c

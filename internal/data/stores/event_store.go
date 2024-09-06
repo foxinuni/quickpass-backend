@@ -16,6 +16,7 @@ type EventFilter struct{}
 type EventStore interface {
 	GetAll(ctx context.Context) ([]models.Event, error)
 	GetById(ctx context.Context, id int) (*models.Event, error)
+	GetByName(ctx context.Context, name string) (*models.Event, error)
 	Create(ctx context.Context, event *models.Event) error
 	Update(ctx context.Context, event *models.Event) error
 	Delete(ctx context.Context, id int) error
@@ -57,6 +58,20 @@ func (s *PostgresEventStore) GetAll(ctx context.Context) ([]models.Event, error)
 func (s *PostgresEventStore) GetById(ctx context.Context, id int) (*models.Event, error) {
 	var event models.Event
 	row := s.pool.QueryRow(ctx, `SELECT event_id, start_date, end_date, address, name FROM events WHERE event_id = $1`, id)
+	if err := row.Scan(&event.EventID, &event.StartDate, &event.EndDate, &event.Address, &event.Name); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrEventNotFound
+		}
+
+		return nil, err
+	}
+
+	return &event, nil
+}
+
+func (s *PostgresEventStore) GetByName(ctx context.Context, name string) (*models.Event, error) {
+	var event models.Event
+	row := s.pool.QueryRow(ctx, `SELECT event_id, start_date, end_date, address, name FROM events WHERE name = $1`, name)
 	if err := row.Scan(&event.EventID, &event.StartDate, &event.EndDate, &event.Address, &event.Name); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrEventNotFound

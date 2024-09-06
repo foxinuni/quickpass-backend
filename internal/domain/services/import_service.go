@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/foxinuni/quickpass-backend/internal/data/repo"
+	"github.com/foxinuni/quickpass-backend/internal/data/stores"
 	"github.com/foxinuni/quickpass-backend/internal/domain/entities"
 	"github.com/rs/zerolog/log"
 	"github.com/xuri/excelize/v2"
@@ -16,12 +18,30 @@ type ImportService interface {
 }
 
 type ExcelImportService struct {
-	// userRepo  repo.UserRepository
-	// eventRepo repo.EventRepository
+	userRepo     repo.UserRepository
+	eventRepo    repo.EventRepository
+	accomRepo    repo.AccomodationRepository
+	bookingRepo  repo.BookingRepository
+	occasionRepo repo.OccasionRepository
+	stateService StateService
 }
 
-func NewExcelImportService() *ExcelImportService {
-	return &ExcelImportService{}
+func NewExcelImportService(
+	userRepo repo.UserRepository,
+	event repo.EventRepository,
+	accomRepo repo.AccomodationRepository,
+	bookingRepo repo.BookingRepository,
+	occasionRepo repo.OccasionRepository,
+	stateService StateService,
+) *ExcelImportService {
+	return &ExcelImportService{
+		userRepo:     userRepo,
+		eventRepo:    event,
+		accomRepo:    accomRepo,
+		bookingRepo:  bookingRepo,
+		occasionRepo: occasionRepo,
+		stateService: stateService,
+	}
 }
 
 func (s *ExcelImportService) ImportFromFile(reader io.Reader) error {
@@ -32,116 +52,271 @@ func (s *ExcelImportService) ImportFromFile(reader io.Reader) error {
 	defer f.Close()
 
 	// Get all the rows for the first sheet
-	fmt.Printf("Sheet names: %v\n", f.GetSheetName(0))
-	rows, err := f.GetRows(f.GetSheetName(0))
+	row := 3
+	sheet := f.GetSheetName(0)
+
+	// Get or create state
+	state, err := s.stateService.GetOrCreateState(StateRegistered)
 	if err != nil {
 		return err
 	}
 
-	// email, number (client)
-	// name, start_date, end_date, address (event)
-	// address, entry_date, leaving_date, is_house (house)
-
-	// Iterate over the rows
-	for i, row := range rows {
-		if i < 2 {
-			continue
+	for {
+		user, err := s.parseUser(f, sheet, row)
+		if err != nil {
+			if err == ErrEmailEmpty {
+				break
+			}
 		}
 
-		var user *entities.User
-		var event *entities.Event
-		var accomodation *entities.Accomodation
-		var booking *entities.Booking
-
-		fmt.Printf("row: %+v\n", row)
-
-		// email, number (client)
-		email, number := row[0], row[1]
-		user = entities.NewUser(0, email, number)
-
-		// name, start_date, end_date, address (event)
-		name := row[2]
-		if name != "" {
-			startDate, err := time.Parse("2006-01-02", row[3])
-			if err != nil {
-				log.Warn().Err(err).Msgf("failed to parse date: %s when scanning for event", row[3])
-				return err
-			}
-
-			endDate, err := time.Parse("2006-01-02", row[4])
-			if err != nil {
-				log.Warn().Err(err).Msgf("failed to parse date: %s when scanning for event", row[4])
-				return err
-			}
-
-			address := row[5]
-
-			event = entities.NewEvent(0, name, address, startDate, endDate)
+		// Get or create user
+		if err := s.getOrCreateUser(user); err != nil {
+			return err
 		}
 
-		// address, entry_date, leaving_date, is_house (booking)
-		address := row[6]
-		if address != "" {
-			entryDate, err := time.Parse("2006-01-02", row[7])
-			if err != nil {
-				log.Warn().Err(err).Msgf("failed to parse date: %s when scanning for house", row[7])
-				return err
-			}
-
-			leavingDate, err := time.Parse("2006-01-02", row[8])
-			if err != nil {
-				log.Warn().Err(err).Msgf("failed to parse date: %s when scanning for house", row[8])
-				return err
-			}
-
-			isHouse, err := strconv.ParseBool(row[9])
-			if err != nil {
-				log.Warn().Err(err).Msgf("failed to parse bool: %s when scanning for house", row[9])
-				return err
-			}
-
-			// Create the accomodation
-			accomodation = entities.NewAccomodation(0, isHouse, address)
-
-			// Create the booking
-			booking = entities.NewBooking(0, nil, entryDate, leavingDate)
+		event, err := s.parseEvent(f, sheet, row)
+		if err != nil && err != ErrNameEmpty {
+			return err
 		}
 
-		// Debug print all the data
-		fmt.Printf("user: %v\n", user)
-		fmt.Printf("event: %v\n", event)
-		fmt.Printf("accomodation: %v\n", accomodation)
-		fmt.Printf("booking: %v\n", booking)
-
-		/*
-			// Find user if it exists
-			if found, err := s.userRepo.GetByEmail(user.Email); err != nil {
-				if err == stores.ErrUserNotFound {
-					if err := s.userRepo.Create(user); err != nil {
-						log.Warn().Err(err).Msgf("failed to create user with email: %s", user.Email)
-						return err
-					}
-				} else {
-					log.Warn().Err(err).Msgf("failed to find user with email: %s", user.Email)
-					return err
-				}
-			} else {
-				user = found
+		// Get or create event
+		if event != nil {
+			if err := s.getOrCreateEvent(event); err != nil {
+				return err
 			}
+		}
 
-			// Create the event
-			if event != nil {
-				if err := s.eventRepo.Create(event); err != nil {
-					log.Warn().Err(err).Msgf("failed to create event with name: %s", event.Name)
-					return err
-				}
+		accomodation, booking, err := s.parseBooking(f, sheet, row)
+		if err != nil && err != ErrAccAddressEmpty {
+			return err
+		}
+
+		// Get or create booking
+		if accomodation != nil && booking != nil {
+			if err := s.getOrCreateBooking(accomodation, booking); err != nil {
+				return err
 			}
-		*/
+		}
+
+		// Create occasion
+		occasion := entities.NewOccasion(0, user, event, booking, state, false)
+		if err := s.occasionRepo.Create(occasion); err != nil {
+			return err
+		}
+
+		log.Debug().Msgf("Imported (user: %v, event: %v, booking: %v)", user, event, booking)
+		row++
 	}
+
 	return nil
 }
 
-func (s *ExcelImportService) GetOrCreateUserFromRow(file *excelize.File, sheet string, row string) (*entities.User, error) {
-	// Get the data from the row
-	return nil, nil
+var ErrEmailEmpty = fmt.Errorf("email is empty")
+var ErrNumberEmpty = fmt.Errorf("number is empty")
+
+func (s *ExcelImportService) parseUser(file *excelize.File, sheet string, row int) (*entities.User, error) {
+	// Read email and number from the row
+	email, err := file.GetCellValue(sheet, fmt.Sprintf("A%d", row))
+	if err != nil {
+		return nil, err
+	}
+
+	if email == "" {
+		return nil, ErrEmailEmpty
+	}
+
+	// Read the number from the row
+	number, err := file.GetCellValue(sheet, fmt.Sprintf("B%d", row))
+	if err != nil {
+		return nil, err
+	}
+
+	if number == "" {
+		return nil, ErrNumberEmpty
+	}
+
+	// Create the user
+	user := entities.NewUser(0, email, number)
+	return user, nil
+}
+
+func (s *ExcelImportService) getOrCreateUser(entity *entities.User) error {
+	user, err := s.userRepo.GetByEmail(entity.Email)
+	if err != nil {
+		if err == stores.ErrUserNotFound {
+			if err := s.userRepo.Create(entity); err != nil {
+				return err
+			}
+
+			return nil
+		} else {
+			return err
+		}
+	}
+
+	*entity = *user
+	return nil
+}
+
+var ErrNameEmpty = fmt.Errorf("name is empty")
+var ErrStartDateEmpty = fmt.Errorf("start date is empty")
+var ErrEndDateEmpty = fmt.Errorf("end date is empty")
+var ErrAddressEmpty = fmt.Errorf("address is empty")
+
+func (s *ExcelImportService) parseEvent(file *excelize.File, sheet string, row int) (*entities.Event, error) {
+	// Read the name from the row
+	name, err := file.GetCellValue(sheet, fmt.Sprintf("C%d", row))
+	if err != nil {
+		return nil, err
+	}
+
+	if name == "" {
+		return nil, ErrNameEmpty
+	}
+
+	// Read the start date from the row
+	startDateStr, err := file.GetCellValue(sheet, fmt.Sprintf("D%d", row))
+	if err != nil {
+		return nil, err
+	}
+
+	if startDateStr == "" {
+		return nil, ErrStartDateEmpty
+	}
+
+	startDate, err := time.Parse("2006-01-02", startDateStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// Read the end date from the row
+	endDateStr, err := file.GetCellValue(sheet, fmt.Sprintf("E%d", row))
+	if err != nil {
+		return nil, err
+	}
+
+	if endDateStr == "" {
+		return nil, ErrEndDateEmpty
+	}
+
+	endDate, err := time.Parse("2006-01-02", endDateStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// Read the address from the row
+	address, err := file.GetCellValue(sheet, fmt.Sprintf("F%d", row))
+	if err != nil {
+		return nil, err
+	}
+
+	// Create the event
+	event := entities.NewEvent(0, name, address, startDate, endDate)
+	return event, nil
+}
+
+func (s *ExcelImportService) getOrCreateEvent(entity *entities.Event) error {
+	event, err := s.eventRepo.GetByName(entity.Name)
+	if err != nil {
+		if err == stores.ErrEventNotFound {
+			if err := s.eventRepo.Create(entity); err != nil {
+				return err
+			}
+
+			return nil
+		} else {
+			return err
+		}
+	}
+
+	*entity = *event
+	return nil
+}
+
+var ErrAccAddressEmpty = fmt.Errorf("address is empty")
+var ErrEntryDateEmpty = fmt.Errorf("entry date is empty")
+var ErrLeavingDateEmpty = fmt.Errorf("leaving date is empty")
+var ErrIsHouseEmpty = fmt.Errorf("is house is empty")
+
+func (s *ExcelImportService) parseBooking(file *excelize.File, sheet string, row int) (*entities.Accomodation, *entities.Booking, error) {
+	// Read the address from the row
+	address, err := file.GetCellValue(sheet, fmt.Sprintf("G%d", row))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if address == "" {
+		return nil, nil, ErrAccAddressEmpty
+	}
+
+	// Read the entry date from the row
+	entryDateStr, err := file.GetCellValue(sheet, fmt.Sprintf("H%d", row))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if entryDateStr == "" {
+		return nil, nil, ErrEntryDateEmpty
+	}
+
+	entryDate, err := time.Parse("2006-01-02", entryDateStr)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Read the leaving date from the row
+	leavingDateStr, err := file.GetCellValue(sheet, fmt.Sprintf("I%d", row))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if leavingDateStr == "" {
+		return nil, nil, ErrLeavingDateEmpty
+	}
+
+	leavingDate, err := time.Parse("2006-01-02", leavingDateStr)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Read the is house from the row
+	isHouseStr, err := file.GetCellValue(sheet, fmt.Sprintf("J%d", row))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if isHouseStr == "" {
+		return nil, nil, ErrIsHouseEmpty
+	}
+
+	isHouse, err := strconv.ParseBool(isHouseStr)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	accomodation := entities.NewAccomodation(0, isHouse, address)
+	booking := entities.NewBooking(0, nil, entryDate, leavingDate)
+
+	return accomodation, booking, nil
+}
+
+func (s *ExcelImportService) getOrCreateBooking(accomodation *entities.Accomodation, booking *entities.Booking) error {
+	accom, err := s.accomRepo.GetByAddress(accomodation.Address)
+	if err != nil {
+		if err == stores.ErrAccomodationNotFound {
+			if err := s.accomRepo.Create(accomodation); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	} else {
+		*accomodation = *accom
+	}
+
+	// Update the booking with the accomodation
+	booking.Accomodation = accomodation
+
+	// Create booking
+	return s.bookingRepo.Create(booking)
 }

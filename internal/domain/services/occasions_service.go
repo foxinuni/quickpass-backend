@@ -90,14 +90,14 @@ func (s *RepoOccassionsService) ConfirmOccasionForUser(user *entities.User, occa
 	// Get the state for the occasion
 	var state *entities.State
 	if confirm {
-		created, err := s.stateService.GetOrCreateState("confirmed")
+		created, err := s.stateService.GetOrCreateState(StateConfirmed)
 		if err != nil {
 			return nil, err
 		}
 
 		state = created
 	} else {
-		created, err := s.stateService.GetOrCreateState("declined")
+		created, err := s.stateService.GetOrCreateState(StateDeclined)
 		if err != nil {
 			return nil, err
 		}

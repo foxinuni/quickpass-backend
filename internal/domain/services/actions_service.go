@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	ErrOccasionNotInCourse  = errors.New("The occasion isn't in course right now, not able to do actions")
-	ErrOccasionNotConfirmed = errors.New("The occasion isn't confirmed, cannot perform actions")
+	ErrOccasionNotInCourse  = errors.New("the occasion isn't in course right now, not able to do actions")
+	ErrOccasionNotConfirmed = errors.New("the occasion isn't confirmed, cannot perform actions")
 )
 
 type ActionsService interface {

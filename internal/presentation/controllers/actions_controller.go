@@ -27,7 +27,7 @@ func (ac *ActionsController) NewAction(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "user required but not found")
 	}
 
-	//validation of DTO
+	// validation of DTO
 	var action dtos.ActionDTO
 	if err := c.Bind(&action); err != nil {
 		return err
@@ -36,7 +36,7 @@ func (ac *ActionsController) NewAction(c echo.Context) error {
 		return err
 	}
 
-	//call the actions service
+	// call the actions service
 	isInside, err := ac.actionsService.NewAction(user, action.OccasionID)
 	if err != nil {
 		return err
