@@ -11,7 +11,9 @@ import (
 
 var ErrLogNotFound = errors.New("log not found")
 
-type LogFilter struct{}
+type LogFilter struct{
+	OccasionId *int
+}
 
 type LogStore interface {
 	GetAll(ctx context.Context, filter LogFilter) ([]models.Log, error)
@@ -37,7 +39,9 @@ func NewPostgresLogStore(pool *pgxpool.Pool) *PostgresLogStore {
 
 func (s *PostgresLogStore) GetAll(ctx context.Context, filter LogFilter) ([]models.Log, error) {
 	var logs []models.Log
-	rows, err := s.pool.Query(ctx, `SELECT log_id, occasion_id, time, is_inside FROM logs`)
+	rows, err := s.pool.Query(ctx, `SELECT log_id, occasion_id, time, is_inside FROM logs
+		WHERE (CASE WHEN $1::int IS NULL THEN TRUE ELSE occasion_id = $1::int END)
+	`, filter.OccasionId)
 	if err != nil {
 		return nil, err
 	}

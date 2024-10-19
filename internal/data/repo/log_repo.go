@@ -6,19 +6,25 @@ import (
 
 	"github.com/foxinuni/quickpass-backend/internal/data/models"
 	"github.com/foxinuni/quickpass-backend/internal/data/stores"
+	"github.com/foxinuni/quickpass-backend/internal/domain/entities"
 )
 
 type LogRepository interface {
 	NewAction(occasionID int) (bool, error)
+	GetLogs(eventId *int, bookingId *int) ([]*entities.LogHistory, error)
 }
 
 type StoreLogRepository struct {
 	logStore stores.LogStore
+	occasionStore stores.OccasionStore
+	userStore stores.UserStore
 }
 
-func NewStoreLogRepository(logStore stores.LogStore) LogRepository {
+func NewStoreLogRepository(logStore stores.LogStore, occasionStore stores.OccasionStore, userStore stores.UserStore) LogRepository {
 	return &StoreLogRepository{
 		logStore: logStore,
+		occasionStore: occasionStore,
+		userStore: userStore,
 	}
 }
 
@@ -47,5 +53,35 @@ func (r *StoreLogRepository) NewAction(occasionID int) (bool, error) {
 		return false, nil
 	}
 	return isInside, nil
+
+}
+
+func (r * StoreLogRepository) GetLogs(eventId *int, bookingId *int) ([]*entities.LogHistory, error){
+	ocassions, err:=r.occasionStore.GetAll(context.Background(), stores.OccasionFilter{
+		EventID: eventId,
+		BookingID: bookingId,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	allLogs := make([]*entities.LogHistory, 0)
+
+	for _, occasion := range  ocassions{
+		user, err := r.userStore.GetById(context.Background(), occasion.UserID)
+		if err == nil{
+			logs, err :=r.logStore.GetAll(context.Background(), stores.LogFilter{
+				OccasionId: &occasion.OccasionID,
+			})
+			
+			if err == nil{
+				for _, log := range logs{
+					allLogs = append(allLogs, entities.NewLogHistory(log.LogID, user.Email, log.IsInside, log.Time))
+				}
+			}
+		}
+	}
+	return allLogs, nil
 
 }

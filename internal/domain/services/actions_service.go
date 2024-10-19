@@ -16,6 +16,7 @@ var (
 
 type ActionsService interface {
 	NewAction(user *entities.User, occasionID int) (bool, error)
+	GetLogs(eventId *int, bookingId *int) ([]*entities.LogHistory, error)
 }
 
 type RepoActionsService struct {
@@ -54,4 +55,9 @@ func (as *RepoActionsService) NewAction(user *entities.User, occasionID int) (bo
 	}
 
 	return as.logRepo.NewAction(occasionID)
+}
+
+
+func (as *RepoActionsService) GetLogs(eventId *int, bookingId *int) ([]*entities.LogHistory, error){
+	return as.logRepo.GetLogs(eventId, bookingId)
 }
