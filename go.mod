@@ -31,6 +31,7 @@ require (
 	github.com/cristalhq/aconfig v0.18.5 // indirect
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/google/wire v0.6.0
+	github.com/gorilla/websocket v1.5.3
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.14.3 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect

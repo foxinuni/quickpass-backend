@@ -12,6 +12,7 @@ import (
 type LogRepository interface {
 	NewAction(occasionID int) (bool, error)
 	GetLogs(eventId *int, bookingId *int) ([]*entities.LogHistory, error)
+	GetLastLogFrom(occasionId int)(*entities.LogHistory, error)
 }
 
 type StoreLogRepository struct {
@@ -84,4 +85,20 @@ func (r * StoreLogRepository) GetLogs(eventId *int, bookingId *int) ([]*entities
 	}
 	return allLogs, nil
 
+}
+
+func (r *StoreLogRepository)GetLastLogFrom(occasionId int)(*entities.LogHistory, error){
+	log, err := r.logStore.GetLastFromOcassion(context.Background(), occasionId)
+	if err != nil{
+		return nil, err
+	}
+	occasion, err := r.occasionStore.GetById(context.Background(),occasionId)
+	if err != nil{
+		return nil, err
+	}
+	user, err := r.userStore.GetById(context.Background(),occasion.UserID)
+	if err != nil{
+		return nil, err
+	}
+	return entities.NewLogHistory(log.LogID, user.Email, log.IsInside, log.Time), nil
 }

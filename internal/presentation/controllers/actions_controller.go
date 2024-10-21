@@ -11,11 +11,13 @@ import (
 
 type ActionsController struct {
 	actionsService services.ActionsService
+	websocketController *WebSocketsController
 }
 
-func NewActionsController(actionsService services.ActionsService) *ActionsController {
+func NewActionsController(actionsService services.ActionsService, websocketController *WebSocketsController) *ActionsController {
 	return &ActionsController{
 		actionsService: actionsService,
+		websocketController: websocketController,
 	}
 }
 
@@ -41,6 +43,8 @@ func (ac *ActionsController) NewAction(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+
+	ac.websocketController.NewEventLog(action.OccasionID)
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"inside": isInside,
