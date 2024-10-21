@@ -7,6 +7,7 @@ import (
 	"github.com/foxinuni/quickpass-backend/internal/presentation/routes"
 	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog/log"
 )
 
@@ -60,6 +61,15 @@ func (api *QuickpassAPI) Listen() error {
 	// Create a new Echo instance
 	app := echo.New()
 
+	app.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost", "http://127.0.0.1"}, // Allow specific base origins
+		AllowOriginFunc: func(origin string) (bool, error) {
+			// Allow any localhost or 127.0.0.1 with any port
+			return origin == "http://localhost" || origin == "http://127.0.0.1" || isLocalhostWithPort(origin), nil
+		},
+		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
+	}))
+
 	// Hide the banner and port
 	app.HideBanner = true
 	app.HidePort = true
@@ -106,4 +116,8 @@ func (cv *CustomValidator) Validate(dto interface{}) error {
 	}
 
 	return nil
+}
+
+func isLocalhostWithPort(origin string) bool {
+	return len(origin) >= 17 && origin[:17] == "http://localhost:" || len(origin) >= 18 && origin[:18] == "http://127.0.0.1:"
 }

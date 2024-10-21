@@ -40,7 +40,6 @@ func (oc *OccasionsController) Create(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-
 	// Return the number of occasions imported
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"number": count,

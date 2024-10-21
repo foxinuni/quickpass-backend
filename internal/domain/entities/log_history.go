@@ -4,7 +4,7 @@ import "time"
 
 type LogHistory struct {
 	LogID    int       `json:"log_id"`
-	Email 	 string 	`json: "email"`
+	Email 	 string 	`json:"email"`
 	IsInside bool      `json:"is_inside"`
 	Time     time.Time `json:"time"`
 }
