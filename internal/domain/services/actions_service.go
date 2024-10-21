@@ -78,7 +78,7 @@ func (as *RepoActionsService) GetLastLog(occasionId int) (*entities.LogHistory, 
 		bookingId = &occasion.Booking.BookingID
 	}
 	if occasion.Event != nil{
-		bookingId = &occasion.Event.EventID
+		eventId = &occasion.Event.EventID
 	}
 	return log, eventId, bookingId, nil
 }

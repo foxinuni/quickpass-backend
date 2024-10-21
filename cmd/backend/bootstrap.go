@@ -41,6 +41,7 @@ var backendSet = wire.NewSet(
 	routes.NewSessionsRouter,
 	routes.NewOccasionsRouter,
 	routes.NewLogsRouter,
+	routes.NewWebSocketRouter,
 
 	// Controllers
 	controllers.NewBookingsController,
@@ -53,6 +54,7 @@ var backendSet = wire.NewSet(
 	controllers.NewEventsController,
 	controllers.NewSessionController,
 	controllers.NewLogsController,
+	controllers.NewWebSocketsController,
 
 	// Strategies
 	auth.NewAuthServiceStrategy,

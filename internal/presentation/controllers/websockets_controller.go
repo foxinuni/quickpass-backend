@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -38,6 +39,7 @@ func NewWebSocketsController(actionsService services.ActionsService) *WebSockets
 func (sc *WebSocketsController) NewEventLog(occasionId int){
 	log, eventId, _, err :=sc.actionsService.GetLastLog(occasionId)
 	if err != nil{
+		fmt.Print(err.Error())
 		return
 	}
 	if eventId != nil{
