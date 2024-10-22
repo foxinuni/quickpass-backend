@@ -20,4 +20,5 @@ func (er *EventsRouter) RegisterRoutes(echo *echo.Echo){
 	actionsGroup.GET("", er.eventsController.GetAll)
 	actionsGroup.GET("/:id", er.eventsController.GetOccasionsFromEvent)
 	actionsGroup.POST("/:id/invite", er.eventsController.InviteUsersToEvent)
+	actionsGroup.POST("/:id/invite/all", er.eventsController.InviteAllUsersToEvent)
 }

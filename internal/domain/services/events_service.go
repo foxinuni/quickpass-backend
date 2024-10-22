@@ -13,6 +13,7 @@ type EventsService interface {
 	GetEventsForUser(user *entities.User) ([]*entities.Occasion, error)
 	GetOccasionsFromEvent(eventId int) ([]*entities.Occasion, error)
 	InviteUsers(eventId int, occasionIds []int) (int, error)
+	InviteAllUsers(eventId int) (int, error)
 }
 
 var _ EventsService = (*RepoEventsService)(nil)
@@ -130,4 +131,23 @@ func (s *RepoEventsService) InviteUsers(eventId int, occasionIds []int) (int, er
 	}
 
 	return counter, nil
+}
+
+
+func (s *RepoEventsService) InviteAllUsers(eventId int) (int, error){
+	event, err := s.eventRepo.GetById(eventId)
+	if err != nil{
+		return 0, nil
+	}
+	occasions, err :=s.occasionRepo.GetAll(repo.OccasionForEvent(event))
+	if err != nil{
+		return 0, nil
+	}
+	var occasionIds []int
+	for _,occasion := range occasions{
+		if occasion.State.StateName == StateRegistered {
+			occasionIds = append(occasionIds, occasion.OccasionID)
+		}
+	}
+	return s.InviteUsers(eventId, occasionIds)
 }

@@ -23,11 +23,6 @@ VALUES (
 --poblate users
 INSERT INTO users(email, number) VALUES ('juan@gmail.com', '3008522437');
 
---poblate states
-INSERT INTO states(name) VALUES('REGISTRADO');
-INSERT INTO states(name) VALUES('INVITADO');
-INSERT INTO states(name) VALUES('CONFIRMADO');
-
 --poblate occasions
 INSERT INTO occasions(user_id, booking_id, state_id) VALUES(
     (select user_id from users where email = 'juan@gmail.com' LIMIT 1),
