@@ -21,4 +21,6 @@ func (br *BookingsRouter) RegisterRoutes(echo *echo.Echo) {
 
 	//suscribing controller
 	bookingsGroup.GET("", br.bookingsController.GetAll)
+	bookingsGroup.POST("/invite/:id", br.bookingsController.InviteOccasion)
+	bookingsGroup.POST("/invite/all", br.bookingsController.InviteAllBookings)
 }
