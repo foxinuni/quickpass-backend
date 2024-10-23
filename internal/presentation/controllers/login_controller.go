@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/foxinuni/quickpass-backend/internal/domain/entities"
 	"github.com/foxinuni/quickpass-backend/internal/domain/services"
@@ -32,12 +33,38 @@ func (lc *LoginController) Login(c echo.Context) error {
 	}
 
 	// Call the login service
-	session, err := lc.authService.Login(login.Email, login.Number, login.PhoneModel, login.PhoneEMEI)
+	err := lc.authService.Login(login.Email, login.Number, login.PhoneModel)
 	if err != nil {
 		if err == services.ErrInvalidCredentials {
 			return echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
 		}
 
+		return err
+	}
+	return c.NoContent(http.StatusOK)
+}
+
+func (lc *LoginController) SubmitCode (c echo.Context) error {
+	var verification dtos.VerificationDTO
+	if err := c.Bind(&verification); err != nil {
+		return err
+	}
+
+	if err := c.Validate(&verification); err != nil {
+		return err
+	}
+
+	code, err := strconv.Atoi(verification.Code); 
+	if err != nil{
+		return err
+	}
+
+	// Call the login service
+	session, err := lc.authService.SubmitCode(verification.Number, code)
+	if err != nil {
+		if err == services.ErrInvalidCredentials {
+			return echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
+		}
 		return err
 	}
 
@@ -46,6 +73,7 @@ func (lc *LoginController) Login(c echo.Context) error {
 		"token": session.Token,
 	})
 }
+
 
 func (lc *LoginController) Logout(c echo.Context) error {
 	// Get session from context

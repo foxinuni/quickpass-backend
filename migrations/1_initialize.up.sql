@@ -8,7 +8,6 @@ CREATE TABLE sessions (
     session_id SERIAL PRIMARY KEY,
     jwt_token VARCHAR(255),
     phone_model VARCHAR(255),
-    IMEI VARCHAR(255),
     enabled BOOLEAN,
     user_id INTEGER REFERENCES users(user_id)
 );

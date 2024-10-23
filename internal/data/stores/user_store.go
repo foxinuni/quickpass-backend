@@ -18,6 +18,7 @@ type UserFilters struct{}
 type UserStore interface {
 	GetAll(ctx context.Context, filter UserFilters) ([]models.User, error)
 	GetById(ctx context.Context, id int) (*models.User, error)
+	GetByPhone(ctx context.Context, number string) (*models.User, error)
 	GetByEmail(ctx context.Context, email string) (*models.User, error)
 	Create(ctx context.Context, user *models.User) error
 	Update(ctx context.Context, user *models.User) error
@@ -55,6 +56,22 @@ func (s *PostgresUserStore) GetById(ctx context.Context, id int) (*models.User, 
 
 	return &user, nil
 }
+
+func (s *PostgresUserStore) GetByPhone(ctx context.Context, number string) (*models.User, error) {
+	var user models.User
+	row := s.pool.QueryRow(ctx, `SELECT user_id, email, number FROM users WHERE number = $1`, number)
+
+	if err := row.Scan(&user.UserID, &user.Email, &user.Number); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 
 func (s *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	var user models.User
