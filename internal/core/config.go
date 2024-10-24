@@ -13,9 +13,6 @@ type ApplicationConfig struct {
 	JwtSecret        string `env:"JWT_SECRET" required:"true"`
 	SendgridEmail    string `env:"SENDGRID_EMAIL" required:"true"`
 	SendgridAPIKey   string `env:"SENDGRID_API_KEY" required:"true"`
-	TwilioSID		string `env:"TWILIO_SID" required:"true"`
-	TwilioToken 	string `env:"TWILIO_TOKEN" required:"true"`
-	TwilioNumber 	string `env:"TWILIO_NUMBER" required:"true"`
 }
 
 func LoadConfig() (*ApplicationConfig, error) {
@@ -64,18 +61,4 @@ func (c *ApplicationConfig) GetSendgridEmail() string {
 
 func (c *ApplicationConfig) GetSendgridAPIKey() string {
 	return c.SendgridAPIKey
-}
-// --- TwilioOptions implementation --- //
-var _ services.TwilioSMSServiceOptions =  (*ApplicationConfig)(nil)
-
-func (c *ApplicationConfig) GetTwilioSID() string{
-	return c.TwilioSID
-}
-
-func (c *ApplicationConfig) GetTwilioToken() string{
-	return c.TwilioToken
-}
-
-func (c *ApplicationConfig) GetTwilioNumber() string{
-	return c.TwilioNumber
 }

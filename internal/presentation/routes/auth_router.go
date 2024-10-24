@@ -24,5 +24,6 @@ func (lr *AuthRouter) RegisterRoutes(echo *echo.Echo) {
 
 	// Register the login route
 	loginGroup.POST("/login", lr.loginController.Login)
+	loginGroup.POST("/submit", lr.loginController.SubmitCode)
 	loginGroup.POST("/logout", lr.loginController.Logout, middlewares.AuthMiddleware(lr.authStrategy))
 }

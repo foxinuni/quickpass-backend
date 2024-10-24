@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math/rand"
-	"strconv"
 	"time"
 
 	"github.com/foxinuni/quickpass-backend/internal/data/repo"
@@ -47,11 +47,11 @@ type JwtAuthService struct {
 	userRepo    repo.UserRepository
 	sessionRepo repo.SessionRepository
 	options     JwtAuthServiceOptions
-	smsService 	SMSService
 	redisClient *redis.Client
+	emailService EmailService
 }
 
-func NewJwtAuthService(options JwtAuthServiceOptions, userRepo repo.UserRepository, sessionRepo repo.SessionRepository, smsService SMSService) AuthService {
+func NewJwtAuthService(options JwtAuthServiceOptions, userRepo repo.UserRepository, sessionRepo repo.SessionRepository, emailService EmailService) AuthService {
 	redisClient := redis.NewClient(&redis.Options{
         Addr:     "localhost:6379",
         Password: "", // no password set
@@ -62,7 +62,7 @@ func NewJwtAuthService(options JwtAuthServiceOptions, userRepo repo.UserReposito
 		sessionRepo: sessionRepo,
 		options:     options,
 		redisClient: redisClient,
-		smsService: smsService,
+		emailService: emailService,
 	}
 }
 
@@ -82,11 +82,6 @@ func (a *JwtAuthService) Login(email, number, model string) (error) {
 	}
 	// generate and send code
 	code := rand.Intn(8999) + 1000
-	err = a.smsService.SendVerificationSMS(number, strconv.Itoa(code))
-	if err != nil {
-		return ErrServerError
-	}
-
 	// create wait session and store it in redis
 	session := WaitSession{
 		Email: email,
@@ -94,8 +89,26 @@ func (a *JwtAuthService) Login(email, number, model string) (error) {
 		Model: model,
 		Code : code,
 	}
-	err = a.redisClient.Set(context.Background(), number, session, 5*time.Minute).Err()
+	//serializing data for redis
+	sessionData, err := json.Marshal(session)
+	if err != nil {
+		fmt.Print(err)
+		return ErrServerError
+	}
+	err = a.redisClient.Set(context.Background(), number, sessionData, 5*time.Minute).Err()
 	if err != nil{
+		fmt.Print(err)
+		return ErrServerError
+	}
+
+	//send confirmation email with code
+	err = a.emailService.SendEmail(
+		user.Email,
+		"Un dispositivo esta intentando vincularse a su cuenta",
+		fmt.Sprintf("Un dispositivo %q esta intentando vincularse a su cuenta, en caso de ser tu, ingresa el codigo: %d", model, code),
+	)
+	if err != nil {
+		fmt.Print(err)
 		return ErrServerError
 	}
     return nil
@@ -111,10 +124,12 @@ func (a *JwtAuthService) SubmitCode(phone string, code int) (*entities.Session, 
 
     err = json.Unmarshal([]byte(value), &session)
     if err != nil {
+		fmt.Print(err)
         return nil, ErrServerError
     }
 	//check if code is correct
 	if session.Code != code{
+		fmt.Print(err)
 		return nil, ErrIncorrectCode
 	}
 

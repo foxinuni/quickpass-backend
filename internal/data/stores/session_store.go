@@ -90,7 +90,7 @@ func (s *PostgresSessionStore) GetByToken(ctx context.Context, token string) (*m
 func (s *PostgresSessionStore) Create(ctx context.Context, session *models.Session) error {
 	return s.pool.QueryRow(ctx, `
 		INSERT INTO sessions (user_id, enabled, token, phone_model) 
-		VALUES ($1, $2, $3, $4, $5)
+		VALUES ($1, $2, $3, $4)
 		RETURNING session_id
 	`, session.UserID, session.Enabled, session.Token, session.PhoneModel).Scan(&session.SessionID)
 }

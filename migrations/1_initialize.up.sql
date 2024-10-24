@@ -1,7 +1,7 @@
 CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
-    number INTEGER
+    number VARCHAR(13) UNIQUE NOT NULL
 );
 
 CREATE TABLE sessions (

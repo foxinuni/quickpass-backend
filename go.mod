@@ -54,7 +54,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/redis/go-redis/v9 v9.7.0
 	github.com/rs/zerolog v1.33.0 // indirect
-	github.com/twilio/twilio-go v1.23.4
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/xuri/excelize/v2 v2.9.0
