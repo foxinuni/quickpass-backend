@@ -17,7 +17,8 @@ func NewWebSocketRouter(controller *controllers.WebSocketsController) *WebSocket
 
 func (r *WebSocketRouter) RegisterRoutes(echo *echo.Echo) {
 	echo.GET("/ws/events/:id", r.controller.EventsWebSocketHanlder)
+	echo.GET("/ws/bookings", r.controller.BookingsWebSocketHandler)
 
 	go controllers.EventBroadcaster()
-	//echo.GET("/ws/bookings", handleWebSocket)
+	go controllers.BookingBroadcaster()
 }
