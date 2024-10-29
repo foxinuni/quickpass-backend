@@ -35,15 +35,18 @@ func BookingLookupToFilter(lookup *BookingLookupFilter) stores.BookingFilter {
 type BookingRepository interface {
 	GetAll(filters ...BookingLookupFilterOption) ([]*entities.Booking, error)
 	Create(booking *entities.Booking) error
+	GetById(id int) (*entities.Booking, error)
 }
 
 type StoreBookingRepository struct {
 	bookingStore stores.BookingStore
+	accomodationStore stores.AccomodationStore
 }
 
-func NewStoreBookingRepository(bookingStore stores.BookingStore) BookingRepository {
+func NewStoreBookingRepository(bookingStore stores.BookingStore, accomodationStore stores.AccomodationStore) BookingRepository {
 	return &StoreBookingRepository{
 		bookingStore: bookingStore,
+		accomodationStore: accomodationStore,
 	}
 }
 
@@ -74,4 +77,19 @@ func (r *StoreBookingRepository) Create(booking *entities.Booking) error {
 
 	*booking = *ModelToBooking(model, booking.Accomodation)
 	return nil
+}
+
+func (r *StoreBookingRepository) GetById(id int) (*entities.Booking, error) {
+	booking, err := r.bookingStore.GetById(context.Background(), id)
+	if err != nil {
+		return nil, err
+	}
+	accomodation, err := r.accomodationStore.GetById(context.Background(), booking.AccomodationID)
+	if err != nil {
+		return nil, err
+	}
+	return ModelToBooking(
+		booking, 
+		ModelToAccomodation(accomodation),
+	), nil
 }

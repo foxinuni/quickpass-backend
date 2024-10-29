@@ -19,6 +19,17 @@ func NewSessionController(sessionService services.SessionService) *SessionContro
 	}
 }
 
+func (sc *SessionController) CheckSession(c echo.Context) error {
+	token := c.Param("token")
+	result, err := sc.sessionService.CheckSession(token)
+	if err != nil{
+		return err
+	}
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"enabled": result,
+	})
+}
+
 func (sc *SessionController) GetAll(c echo.Context) error {
 	sessions, err := sc.sessionService.GetAllSessions()
 	if err != nil {

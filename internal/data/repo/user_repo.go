@@ -10,6 +10,7 @@ import (
 type UserRepository interface {
 	GetById(userID int) (*entities.User, error)
 	GetByEmail(email string) (*entities.User, error)
+	GetByNumber(number string) (*entities.User, error)
 	Create(user *entities.User) error
 	Update(user *entities.User) error
 	Delete(userID int) error
@@ -28,6 +29,17 @@ func NewStoreUserRepository(userStore stores.UserStore) UserRepository {
 func (r *StoreUserRepository) GetById(userID int) (*entities.User, error) {
 	// Get the user from the store
 	user, err := r.userStore.GetById(context.Background(), userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert the result to a User entity
+	return ModelToUser(user), nil
+}
+
+func (r *StoreUserRepository) GetByNumber(number string) (*entities.User, error) {
+	// Get the user from the store
+	user, err := r.userStore.GetByPhone(context.Background(), number)
 	if err != nil {
 		return nil, err
 	}

@@ -37,7 +37,7 @@ func NewPostgresSessionStore(pool *pgxpool.Pool) *PostgresSessionStore {
 
 func (s *PostgresSessionStore) GetAll(ctx context.Context, filter SessionFilter) ([]models.Session, error) {
 	var sessions []models.Session
-	rows, err := s.pool.Query(ctx, `SELECT session_id, user_id, enabled, token, phone_model, imei FROM sessions`)
+	rows, err := s.pool.Query(ctx, `SELECT session_id, user_id, enabled, token, phone_model FROM sessions`)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (s *PostgresSessionStore) GetAll(ctx context.Context, filter SessionFilter)
 
 	for rows.Next() {
 		var session models.Session
-		if err := rows.Scan(&session.SessionID, &session.UserID, &session.Enabled, &session.Token, &session.PhoneModel, &session.IMEI); err != nil {
+		if err := rows.Scan(&session.SessionID, &session.UserID, &session.Enabled, &session.Token, &session.PhoneModel); err != nil {
 			return nil, err
 		}
 
@@ -57,10 +57,10 @@ func (s *PostgresSessionStore) GetAll(ctx context.Context, filter SessionFilter)
 
 func (s *PostgresSessionStore) GetById(ctx context.Context, id int) (*models.Session, error) {
 	var session models.Session
-	row := s.pool.QueryRow(ctx, `SELECT session_id, user_id, enabled, token, phone_model, imei FROM sessions WHERE session_id = $1`, id)
+	row := s.pool.QueryRow(ctx, `SELECT session_id, user_id, enabled, token, phone_model FROM sessions WHERE session_id = $1`, id)
 
 	// Scan the row into the session model
-	if err := row.Scan(&session.SessionID, &session.UserID, &session.Enabled, &session.Token, &session.PhoneModel, &session.IMEI); err != nil {
+	if err := row.Scan(&session.SessionID, &session.UserID, &session.Enabled, &session.Token, &session.PhoneModel); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrSessionNotFound
 		}
@@ -72,10 +72,10 @@ func (s *PostgresSessionStore) GetById(ctx context.Context, id int) (*models.Ses
 
 func (s *PostgresSessionStore) GetByToken(ctx context.Context, token string) (*models.Session, error) {
 	var session models.Session
-	row := s.pool.QueryRow(ctx, `SELECT session_id, user_id, enabled, token, phone_model, imei FROM sessions WHERE token = $1`, token)
+	row := s.pool.QueryRow(ctx, `SELECT session_id, user_id, enabled, token, phone_model FROM sessions WHERE token = $1`, token)
 
 	// Scan the row into the session model
-	if err := row.Scan(&session.SessionID, &session.UserID, &session.Enabled, &session.Token, &session.PhoneModel, &session.IMEI); err != nil {
+	if err := row.Scan(&session.SessionID, &session.UserID, &session.Enabled, &session.Token, &session.PhoneModel); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrSessionNotFound
 		}
@@ -89,18 +89,18 @@ func (s *PostgresSessionStore) GetByToken(ctx context.Context, token string) (*m
 
 func (s *PostgresSessionStore) Create(ctx context.Context, session *models.Session) error {
 	return s.pool.QueryRow(ctx, `
-		INSERT INTO sessions (user_id, enabled, token, phone_model, imei) 
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO sessions (user_id, enabled, token, phone_model) 
+		VALUES ($1, $2, $3, $4)
 		RETURNING session_id
-	`, session.UserID, session.Enabled, session.Token, session.PhoneModel, session.IMEI).Scan(&session.SessionID)
+	`, session.UserID, session.Enabled, session.Token, session.PhoneModel).Scan(&session.SessionID)
 }
 
 func (s *PostgresSessionStore) Update(ctx context.Context, session *models.Session) error {
 	_, err := s.pool.Exec(ctx, `
 		UPDATE sessions 
-		SET user_id = $1, enabled = $2, token = $3, phone_model = $4, imei = $5
-		WHERE session_id = $6
-	`, session.UserID, session.Enabled, session.Token, session.PhoneModel, session.IMEI, session.SessionID)
+		SET user_id = $1, enabled = $2, token = $3, phone_model = $4
+		WHERE session_id = $5
+	`, session.UserID, session.Enabled, session.Token, session.PhoneModel, session.SessionID)
 	return err
 }
 

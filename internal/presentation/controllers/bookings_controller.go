@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/foxinuni/quickpass-backend/internal/domain/entities"
 	"github.com/foxinuni/quickpass-backend/internal/domain/services"
@@ -32,4 +33,29 @@ func (bc *BookingsController) GetAll(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, GetAllResponse{Bookings: bookings})
+}
+
+func (bc *BookingsController) InviteOccasion(c echo.Context) error {
+	occasionId, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid event ID")
+	}
+	number, err := bc.bookingService.InviteOccasion(occasionId)
+	if err != nil{
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"number": number,
+	})
+}
+
+
+func (bc *BookingsController) InviteAllBookings(c echo.Context) error {
+	number, err := bc.bookingService.InviteAllBookings()
+	if err != nil{
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"number": number,
+	})
 }

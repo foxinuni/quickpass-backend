@@ -68,11 +68,11 @@ func OccasionToModel(occasion *entities.Occasion) *models.Occasion {
 }
 
 func SessionToModel(session *entities.Session) *models.Session {
-	return models.NewSession(session.GetSessionID(), session.GetUser().GetUserID(), session.GetEnabled(), session.GetToken(), session.GetPhoneModel(), session.GetIMEI())
+	return models.NewSession(session.GetSessionID(), session.GetUser().GetUserID(), session.GetEnabled(), session.GetToken(), session.GetPhoneModel())
 }
 
 func ModelToSession(session *models.Session, user *entities.User) *entities.Session {
-	return entities.NewSession(session.SessionID, user, session.Enabled, session.Token, session.PhoneModel, session.IMEI)
+	return entities.NewSession(session.SessionID, user, session.Enabled, session.Token, session.PhoneModel)
 }
 
 func ModelToState(model *models.State) *entities.State {

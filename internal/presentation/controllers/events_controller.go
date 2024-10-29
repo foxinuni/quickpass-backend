@@ -67,3 +67,18 @@ func (ec *EventsController) InviteUsersToEvent(c echo.Context) error {
 		"number": number,
 	})
 }
+
+func (ec *EventsController) InviteAllUsersToEvent(c echo.Context) error {
+	eventId, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid event ID")
+	}
+	number, err := ec.eventsService.InviteAllUsers(eventId)
+
+	if err != nil{
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"number": number,
+	})
+}

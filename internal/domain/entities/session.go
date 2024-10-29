@@ -6,17 +6,15 @@ type Session struct {
 	Enabled    bool   `json:"enabled"`
 	Token      string `json:"token"`
 	PhoneModel string `json:"phone_model"`
-	IMEI       string `json:"imei"`
 }
 
-func NewSession(sessionID int, user *User, enabled bool, token string, phoneModel string, imei string) *Session {
+func NewSession(sessionID int, user *User, enabled bool, token string, phoneModel string) *Session {
 	return &Session{
 		SessionID:  sessionID,
 		User:       user,
 		Enabled:    enabled,
 		Token:      token,
 		PhoneModel: phoneModel,
-		IMEI:       imei,
 	}
 }
 
@@ -40,10 +38,6 @@ func (s *Session) GetPhoneModel() string {
 	return s.PhoneModel
 }
 
-func (s *Session) GetIMEI() string {
-	return s.IMEI
-}
-
 func (s *Session) SetSessionID(sessionID int) {
 	s.SessionID = sessionID
 }
@@ -62,8 +56,4 @@ func (s *Session) SetEnabled(enabled bool) {
 
 func (s *Session) SetPhoneModel(phoneModel string) {
 	s.PhoneModel = phoneModel
-}
-
-func (s *Session) SetIMEI(imei string) {
-	s.IMEI = imei
-}
+}      

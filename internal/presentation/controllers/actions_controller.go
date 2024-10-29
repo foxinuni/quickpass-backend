@@ -10,12 +10,16 @@ import (
 )
 
 type ActionsController struct {
-	actionsService services.ActionsService
+	actionsService      services.ActionsService
+	occasionService     services.OccassionService
+	websocketController *WebSocketsController
 }
 
-func NewActionsController(actionsService services.ActionsService) *ActionsController {
+func NewActionsController(actionsService services.ActionsService, websocketController *WebSocketsController, occasionService services.OccassionService) *ActionsController {
 	return &ActionsController{
-		actionsService: actionsService,
+		actionsService:      actionsService,
+		websocketController: websocketController,
+		occasionService:     occasionService,
 	}
 }
 
@@ -40,6 +44,16 @@ func (ac *ActionsController) NewAction(c echo.Context) error {
 	isInside, err := ac.actionsService.NewAction(user, action.OccasionID)
 	if err != nil {
 		return err
+	}
+
+	typeOcc, err := ac.occasionService.CheckTypeOfOccasion(action.OccasionID)
+	if err == nil {
+		if !typeOcc {
+			ac.websocketController.NewEventLog(action.OccasionID)
+		}
+		if typeOcc {
+			ac.websocketController.NewBookingLog(action.OccasionID)
+		}
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{

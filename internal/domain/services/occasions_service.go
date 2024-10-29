@@ -14,6 +14,7 @@ type OccassionService interface {
 	GetOccasionsForUser(user *entities.User, active bool) ([]*entities.Occasion, error)
 	GetOccasionForUsersWithId(user *entities.User, occasionID int) (*entities.Occasion, error)
 	ConfirmOccasionForUser(user *entities.User, occasionID int, confirm bool) (*entities.Occasion, error)
+	CheckTypeOfOccasion(occasionId int) (bool, error) //returns true if event, false if booking
 }
 
 type RepoOccassionsService struct {
@@ -26,6 +27,14 @@ func NewRepoOccassionsService(occasionRepo repo.OccasionRepository, stateService
 		occasionRepo: occasionRepo,
 		stateService: stateService,
 	}
+}
+
+func (s *RepoOccassionsService) CheckTypeOfOccasion(occasionId int) (bool, error) {
+	occasion, err := s.occasionRepo.GetById(occasionId)
+	if err != nil {
+		return false, err
+	}
+	return occasion.Event == nil, nil
 }
 
 func (s *RepoOccassionsService) GetOccasionsForUser(user *entities.User, active bool) ([]*entities.Occasion, error) {

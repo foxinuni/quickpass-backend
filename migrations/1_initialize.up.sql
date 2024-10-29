@@ -1,14 +1,13 @@
 CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
-    number INTEGER
+    number VARCHAR(13) UNIQUE NOT NULL
 );
 
 CREATE TABLE sessions (
     session_id SERIAL PRIMARY KEY,
     jwt_token VARCHAR(255),
     phone_model VARCHAR(255),
-    IMEI VARCHAR(255),
     enabled BOOLEAN,
     user_id INTEGER REFERENCES users(user_id)
 );

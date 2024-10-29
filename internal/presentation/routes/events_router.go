@@ -14,10 +14,11 @@ func NewEventsRouter(eventsController *controllers.EventsController) *EventsRout
 }
 
 func (er *EventsRouter) RegisterRoutes(echo *echo.Echo){
-	actionsGroup := echo.Group("/events")
+	eventsGroup := echo.Group("/events")
 
 	//registering routes
-	actionsGroup.GET("", er.eventsController.GetAll)
-	actionsGroup.GET("/:id", er.eventsController.GetOccasionsFromEvent)
-	actionsGroup.POST("/:id/invite", er.eventsController.InviteUsersToEvent)
+	eventsGroup.GET("", er.eventsController.GetAll)
+	eventsGroup.GET("/:id", er.eventsController.GetOccasionsFromEvent)
+	eventsGroup.POST("/:id/invite", er.eventsController.InviteUsersToEvent)
+	eventsGroup.POST("/:id/invite/all", er.eventsController.InviteAllUsersToEvent)
 }
