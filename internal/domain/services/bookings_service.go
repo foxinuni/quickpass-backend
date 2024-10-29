@@ -96,7 +96,7 @@ func (s *RepoBookingsService) sendInvitation(occasionIds []int) (int, error){
 		// send the email
 		err = s.emailService.SendEmail(
 			userEmail,
-			fmt.Sprintf("Haz sido invitado a una reserva"),
+			"Haz sido invitado a una reserva",
 			fmt.Sprintf(`
 				Estas cordialmente invitado a tu reserva en %q. La direccion es: %q.
 				Recuerda que la fecha de entrada es  %s y la salida el %s, confirma tu asistencia por medio de nuesra aplicacion!

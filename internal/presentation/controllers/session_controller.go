@@ -26,7 +26,7 @@ func (sc *SessionController) CheckSession(c echo.Context) error {
 		return err
 	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"status": result,
+		"enabled": result,
 	})
 }
 

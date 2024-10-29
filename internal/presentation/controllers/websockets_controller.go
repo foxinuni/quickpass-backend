@@ -42,7 +42,6 @@ func NewWebSocketsController(actionsService services.ActionsService) *WebSockets
 func (sc *WebSocketsController) NewEventLog(occasionId int) {
 	log, eventId, _, err := sc.actionsService.GetLastLog(occasionId)
 	if err != nil {
-		fmt.Print(err.Error())
 		return
 	}
 	if eventId != nil {
@@ -56,7 +55,6 @@ func (sc *WebSocketsController) NewEventLog(occasionId int) {
 func (sc *WebSocketsController) NewBookingLog(occasionId int) {
 	log, bookingId, _, err := sc.actionsService.GetLastLog(occasionId)
 	if err != nil {
-		fmt.Print(err.Error())
 		return
 	}
 	if bookingId != nil {
@@ -127,7 +125,7 @@ func EventBroadcaster() {
 func BookingBroadcaster() {
 	for {
 		msg := <-bookingsChannel
-		for client, _ := range bookingsClients {
+		for client := range bookingsClients {
 			message, _ := json.Marshal(msg.log)
 			err := client.WriteMessage(websocket.TextMessage, []byte(message))
 			if err != nil {

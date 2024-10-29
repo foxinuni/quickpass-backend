@@ -47,11 +47,11 @@ func (ac *ActionsController) NewAction(c echo.Context) error {
 	}
 
 	typeOcc, err := ac.occasionService.CheckTypeOfOccasion(action.OccasionID)
-	if err != nil {
-		if typeOcc {
+	if err == nil {
+		if !typeOcc {
 			ac.websocketController.NewEventLog(action.OccasionID)
 		}
-		if !typeOcc {
+		if typeOcc {
 			ac.websocketController.NewBookingLog(action.OccasionID)
 		}
 	}

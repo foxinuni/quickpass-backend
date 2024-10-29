@@ -48,10 +48,8 @@ func (s *SendgridEmailService) SendEmail(reciever string, subject string, body s
 
 	// Send the email
 	if _, err := client.Send(message); err != nil {
-		fmt.Print("error sending email")
 		return err
 	}
-	fmt.Printf("to email sent %q", reciever)
 
 	return nil
 }

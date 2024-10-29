@@ -92,12 +92,10 @@ func (a *JwtAuthService) Login(email, number, model string) (error) {
 	//serializing data for redis
 	sessionData, err := json.Marshal(session)
 	if err != nil {
-		fmt.Print(err)
 		return ErrServerError
 	}
 	err = a.redisClient.Set(context.Background(), number, sessionData, 5*time.Minute).Err()
 	if err != nil{
-		fmt.Print(err)
 		return ErrServerError
 	}
 
@@ -108,7 +106,6 @@ func (a *JwtAuthService) Login(email, number, model string) (error) {
 		fmt.Sprintf("Un dispositivo %q esta intentando vincularse a su cuenta, en caso de ser tu, ingresa el codigo: %d", model, code),
 	)
 	if err != nil {
-		fmt.Print(err)
 		return ErrServerError
 	}
     return nil
@@ -124,12 +121,10 @@ func (a *JwtAuthService) SubmitCode(phone string, code int) (*entities.Session, 
 
     err = json.Unmarshal([]byte(value), &session)
     if err != nil {
-		fmt.Print(err)
         return nil, ErrServerError
     }
 	//check if code is correct
 	if session.Code != code{
-		fmt.Print(err)
 		return nil, ErrIncorrectCode
 	}
 

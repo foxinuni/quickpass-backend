@@ -51,7 +51,6 @@ func (as *RepoActionsService) NewAction(user *entities.User, occasionID int) (bo
 		return false, ErrOccasionNotInCourse
 	}
 	if occasion.GetState().GetStateName() != "confirmed" {
-		fmt.Print(occasion.GetState().GetStateName())
 		return false, ErrOccasionNotConfirmed
 	}
 
