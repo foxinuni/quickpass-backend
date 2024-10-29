@@ -25,9 +25,9 @@ func (s *RepoSessionService) GetAllSessions() ([]*entities.Session, error) {
 	return s.sessionRepo.GetAll()
 }
 
-func  (s *RepoSessionService) CheckSession(token string) (bool, error){
+func (s *RepoSessionService) CheckSession(token string) (bool, error) {
 	session, err := s.sessionRepo.GetByToken(token)
-	if err != nil{
+	if err != nil {
 		return false, err
 	}
 	return session.Enabled, nil

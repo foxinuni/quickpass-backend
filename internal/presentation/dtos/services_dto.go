@@ -1,5 +1,5 @@
 package dtos
 
 type SessionPatchDTO struct {
-	Enabled bool `json:"enabled" validate:"required"`
+	Enabled *bool `json:"enabled" validate:"required"`
 }

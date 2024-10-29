@@ -57,7 +57,7 @@ func (sc *SessionController) Update(c echo.Context) error {
 	}
 
 	// Call the service
-	if err := sc.sessionService.EnableSession(id, sessionDTO.Enabled); err != nil {
+	if err := sc.sessionService.EnableSession(id, *sessionDTO.Enabled); err != nil {
 		return err
 	}
 
