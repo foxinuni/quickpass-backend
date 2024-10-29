@@ -10,6 +10,7 @@ type ApplicationConfig struct {
 	ListenAddress    string `env:"LISTEN_ADDRESS" default:":3000"`
 	MigrationsSource string `env:"MIGRATIONS_SRC" default:"file://migrations"`
 	DatabaseURL      string `env:"DATABASE_URL" required:"true"`
+	CacheURL         string `env:"CACHE_URL" required:"true"`
 	JwtSecret        string `env:"JWT_SECRET" required:"true"`
 	SendgridEmail    string `env:"SENDGRID_EMAIL" required:"true"`
 	SendgridAPIKey   string `env:"SENDGRID_API_KEY" required:"true"`
@@ -50,6 +51,10 @@ var _ services.JwtAuthServiceOptions = (*ApplicationConfig)(nil)
 
 func (c *ApplicationConfig) GetJwtSecret() string {
 	return c.JwtSecret
+}
+
+func (c *ApplicationConfig) GetCacheURL() string {
+	return c.CacheURL
 }
 
 // --- SendgridOptions implementation --- //

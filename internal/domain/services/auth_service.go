@@ -13,26 +13,27 @@ import (
 	"github.com/foxinuni/quickpass-backend/internal/domain/entities"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/redis/go-redis/v9"
+	"github.com/rs/zerolog/log"
 )
 
 var (
 	ErrInvalidCredentials = errors.New("invalid email or number")
-	ErrServerError		= errors.New("server error with verification")
+	ErrServerError        = errors.New("server error with verification")
 	ErrInvalidToken       = errors.New("invalid token")
 	ErrSessionDisabled    = errors.New("session is disabled")
-	ErrExpiredCode 		= errors.New("code has expired")
-	ErrIncorrectCode	= errors.New("code is incorrect")
+	ErrExpiredCode        = errors.New("code has expired")
+	ErrIncorrectCode      = errors.New("code is incorrect")
 )
 
-type WaitSession struct{
+type WaitSession struct {
 	Email string `json:"email" validate:"required"`
 	Phone string `json:"phone" validate:"required"`
 	Model string `json:"model" validate:"required"`
-	Code int `json:"code" validate:"required"`
+	Code  int    `json:"code" validate:"required"`
 }
 
 type AuthService interface {
-	Login(email, number, model string) (error)
+	Login(email, number, model string) error
 	SubmitCode(phone string, code int) (*entities.Session, error)
 	Logout(session *entities.Session) error
 	ValidateSession(token string) (*entities.Session, error)
@@ -41,32 +42,39 @@ type AuthService interface {
 
 type JwtAuthServiceOptions interface {
 	GetJwtSecret() string
+	GetCacheURL() string
 }
 
 type JwtAuthService struct {
-	userRepo    repo.UserRepository
-	sessionRepo repo.SessionRepository
-	options     JwtAuthServiceOptions
-	redisClient *redis.Client
+	userRepo     repo.UserRepository
+	sessionRepo  repo.SessionRepository
+	options      JwtAuthServiceOptions
+	redisClient  *redis.Client
 	emailService EmailService
 }
 
-func NewJwtAuthService(options JwtAuthServiceOptions, userRepo repo.UserRepository, sessionRepo repo.SessionRepository, emailService EmailService) AuthService {
-	redisClient := redis.NewClient(&redis.Options{
-        Addr:     "localhost:6379",
-        Password: "", // no password set
-        DB:       0,  // use default DB
-    })
-	return &JwtAuthService{
-		userRepo:    userRepo,
-		sessionRepo: sessionRepo,
-		options:     options,
-		redisClient: redisClient,
-		emailService: emailService,
+func NewJwtAuthService(options JwtAuthServiceOptions, userRepo repo.UserRepository, sessionRepo repo.SessionRepository, emailService EmailService) (AuthService, error) {
+	redisOpts, err := redis.ParseURL(options.GetCacheURL())
+	if err != nil {
+		return nil, err
 	}
+
+	redisClient := redis.NewClient(redisOpts)
+	if err := redisClient.Ping(context.Background()).Err(); err != nil {
+		log.Warn().Err(err).Msg("could not connect to redis!")
+		return nil, err
+	}
+
+	return &JwtAuthService{
+		userRepo:     userRepo,
+		sessionRepo:  sessionRepo,
+		options:      options,
+		redisClient:  redisClient,
+		emailService: emailService,
+	}, nil
 }
 
-func (a *JwtAuthService) Login(email, number, model string) (error) {
+func (a *JwtAuthService) Login(email, number, model string) error {
 	// Get the user by email
 	user, err := a.userRepo.GetByEmail(email)
 	if err != nil {
@@ -87,7 +95,7 @@ func (a *JwtAuthService) Login(email, number, model string) (error) {
 		Email: email,
 		Phone: number,
 		Model: model,
-		Code : code,
+		Code:  code,
 	}
 	//serializing data for redis
 	sessionData, err := json.Marshal(session)
@@ -95,7 +103,7 @@ func (a *JwtAuthService) Login(email, number, model string) (error) {
 		return ErrServerError
 	}
 	err = a.redisClient.Set(context.Background(), number, sessionData, 5*time.Minute).Err()
-	if err != nil{
+	if err != nil {
 		return ErrServerError
 	}
 
@@ -108,10 +116,10 @@ func (a *JwtAuthService) Login(email, number, model string) (error) {
 	if err != nil {
 		return ErrServerError
 	}
-    return nil
+	return nil
 }
 
-func (a *JwtAuthService) SubmitCode(phone string, code int) (*entities.Session, error){
+func (a *JwtAuthService) SubmitCode(phone string, code int) (*entities.Session, error) {
 	var session WaitSession
 	// get current session from redis
 	value, err := a.redisClient.Get(context.Background(), phone).Result()
@@ -119,12 +127,12 @@ func (a *JwtAuthService) SubmitCode(phone string, code int) (*entities.Session, 
 		return nil, ErrExpiredCode
 	}
 
-    err = json.Unmarshal([]byte(value), &session)
-    if err != nil {
-        return nil, ErrServerError
-    }
+	err = json.Unmarshal([]byte(value), &session)
+	if err != nil {
+		return nil, ErrServerError
+	}
 	//check if code is correct
-	if session.Code != code{
+	if session.Code != code {
 		return nil, ErrIncorrectCode
 	}
 
@@ -132,7 +140,7 @@ func (a *JwtAuthService) SubmitCode(phone string, code int) (*entities.Session, 
 	a.redisClient.Del(context.Background(), phone)
 
 	user, err := a.userRepo.GetByNumber(phone)
-	if err != nil{
+	if err != nil {
 		return nil, ErrServerError
 	}
 
